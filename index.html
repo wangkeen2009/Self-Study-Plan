@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自主學習計畫：AI輔助阿茲海默症偵測</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            border-color: #facc15;
+            color: #facc15;
+            background-color: rgba(250, 204, 21, 0.1);
+        }
+        .accordion-content {
+            transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+        }
+        .accordion-content.open {
+            max-height: 2000px; /* Increased max-height for potentially long content */
+        }
+        .accordion-header .icon::after {
+            content: '+';
+            transition: transform 0.3s ease;
+        }
+        .accordion-header.open .icon::after {
+            transform: rotate(45deg);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .prose-dark {
+            color: #d1d5db;
+        }
+        .prose-dark h1, .prose-dark h2, .prose-dark h3, .prose-dark h4 {
+            color: #fde047;
+        }
+        .prose-dark strong {
+            color: #fef08a;
+        }
+        .prose-dark a {
+            color: #fde047;
+        }
+        .prose-dark a:hover {
+            color: #fef08a;
+        }
+        .prose-dark ul > li::before {
+            background-color: #facc15;
+        }
+        input[type="checkbox"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background-color: #374151;
+            border: 2px solid #6b7280;
+            border-radius: 4px;
+            width: 1.25em;
+            height: 1.25em;
+            position: relative;
+            cursor: pointer;
+            vertical-align: middle;
+        }
+        input[type="checkbox"]:checked {
+            background-color: #facc15;
+            border-color: #facc15;
+        }
+        input[type="checkbox"]:checked::after {
+            content: '✔';
+            position: absolute;
+            color: #1f2937;
+            font-size: 0.8em;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        input[type="radio"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background-color: #374151;
+            border: 2px solid #6b7280;
+            border-radius: 50%;
+            width: 1.25em;
+            height: 1.25em;
+            position: relative;
+            cursor: pointer;
+            vertical-align: middle;
+        }
+        input[type="radio"]:checked {
+            background-color: #4b5563;
+            border-color: #facc15;
+        }
+        input[type="radio"]:checked::after {
+            content: '';
+            position: absolute;
+            background-color: #facc15;
+            border-radius: 50%;
+            width: 0.65em;
+            height: 0.65em;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        audio {
+            width: 100%;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
+            background-color: #1f2937; /* bg-gray-800 */
+            filter: invert(1) sepia(0.5) saturate(5) hue-rotate(10deg) brightness(1.1) contrast(0.9);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-300 font-sans">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-5xl font-bold text-yellow-400 mb-2">自主學習計畫</h1>
+            <p class="text-lg md:text-2xl text-yellow-300">AI輔助阿茲海默症早期偵測與預後分析</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center border-b border-gray-700 mb-8">
+            <button data-target="home" class="tab-button py-3 px-4 md:px-6 border-b-2 border-transparent hover:text-yellow-400 active">首頁</button>
+            <button data-target="plan" class="tab-button py-3 px-4 md:px-6 border-b-2 border-transparent hover:text-yellow-400">學習規畫</button>
+            <button data-target="assessment" class="tab-button py-3 px-4 md:px-6 border-b-2 border-transparent hover:text-yellow-400">學習評量</button>
+            <button data-target="content" class="tab-button py-3 px-4 md:px-6 border-b-2 border-transparent hover:text-yellow-400">學習內容</button>
+            <button data-target="charts" class="tab-button py-3 px-4 md:px-6 border-b-2 border-transparent hover:text-yellow-400">分析圖表</button>
+            <button data-target="reflection" class="tab-button py-3 px-4 md:px-6 border-b-2 border-transparent hover:text-yellow-400">心得反思</button>
+            <button data-target="references" class="tab-button py-3 px-4 md:px-6 border-b-2 border-transparent hover:text-yellow-400">參考資料</button>
+        </nav>
+
+        <main id="tab-content">
+            <div id="home" class="tab-pane active prose-dark max-w-none">
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-yellow-300 mb-2">自主學習計畫語音摘要</h3>
+                        <p class="text-sm text-gray-400 mb-3">您可以點擊下方播放器聆聽本計畫的語音摘要。請確保您的音訊檔案 `自主學習計畫語音摘要.mp3` 已放置於正確位置。</p>
+                        <audio controls src="自主學習計畫語音摘要.mp3">
+                            您的瀏覽器不支援音訊播放。
+                        </audio>
+                    </div>
+
+                    <p class="text-lg text-gray-400 mb-6">本計畫旨在將一個有志於醫學領域的高中生，其關於「AI輔助阿茲海默症早期偵測與預後分析」的自主學習構想，轉化為一個結構完整、目標明確、且可執行的學習藍圖。透過這個互動式平台，您將能探索此研究主題的深層動機、具體學習目標、以及完成後所能獲得的豐碩成果，為您的醫學夢想奠定堅實的基石。</p>
+                    
+                    <h3 class="border-b border-yellow-500/50 pb-2 mb-4">研究主題選定之緣由</h3>
+                    <h4 class="text-yellow-400">個人動機與連結</h4>
+                    <p>阿茲海默症 (Alzheimer's Disease, AD) 作為一種進行性的神經退行性疾病，對患者及其家庭帶來深遠的影響，已成為全球高齡化社會中日益嚴峻的健康挑戰。對於此議題的關注，不僅源於對醫學領域的濃厚興趣，也來自於對提升長者生活品質的深切期盼。現階段，阿茲海默症的早期診斷仍面臨諸多困難，往往錯失了早期介入的黃金時機，進而影響治療效果與患者的長期福祉 [1]。近年來，人工智慧 (AI) 技術在醫學領域的應用取得了令人鼓舞的進展，特別是在處理複雜的生物醫學數據、輔助疾病診斷與預測方面展現出巨大潛力。將 AI 技術應用於阿茲海默症的早期偵測與預後分析，不僅是一個具有高度科學價值與社會意義的研究方向，也為有志於醫學研究的學子提供了一個探索前沿科技的契機。此一研究方向深刻體現了科技向善的理念，即運用先進技術解決實際的健康問題，這與未來從醫的初衷高度契合。</p>
+
+                    <h4 class="text-yellow-400 mt-6">社會需求與科學前沿</h4>
+                    <p>阿茲海默症的全球盛行率逐年攀升，對醫療資源、社會照護體系乃至整體經濟均構成沉重負擔 [2, 3]。傳統診斷方法往往依賴於晚期出現的臨床症狀，或需進行侵入性檢查，使得早期、大規模篩查面臨挑戰 [1]。人工智慧，特別是機器學習與深度學習演算法，能夠從高維度的生物醫學數據中（如腦部影像MRI、PET，基因序列，臨床記錄，以及認知功能評估等）提取細微的模式與特徵，為阿茲海默症的早期、無創或微創診斷提供了新的可能性 [2, 4]。值得注意的是，隨著開放科學的發展和公開生醫資料庫的普及，例如阿茲海默症神經影像學倡議 (ADNI)、Kaggle 競賽平台等，以及雲端運算工具如 Google Colab 的易用性提升，使得即便是缺乏大型實驗室資源的學生，也能夠利用個人電腦參與到這樣的前沿研究中 [1]。這種研究模式不僅降低了科研門檻，也培養了學生利用現有資源解決複雜問題的能力，這對於未來醫學人才的培養至關重要。本計畫旨在探索這一路徑，證明高中生亦能在此領域做出有意義的貢獻。</p>
+
+                    <h4 class="text-yellow-400 mt-6">學術興趣與未來志向</h4>
+                    <p>本研究主題的選定，與個人對神經科學、精準醫療以及醫學研究的深厚興趣緊密相關，亦是為未來投身醫學領域學習所做的積極準備。阿茲海默症的複雜性橫跨分子生物學、神經影像學、臨床醫學及數據科學等多個學科，為進行跨領域學習與探索提供了絕佳的平台 [1]。透過本自主學習計畫，期望不僅能深入了解阿茲海默症的醫學知識，更能掌握人工智慧的分析方法，培養將生醫知識、數據科學技能及臨床問題解決能力融會貫通的綜合素養。此計畫的目標之一是建立一套可公開重現的AI模型與操作流程，並產出一份實用的簡易操作手冊 [1]。這不僅是對個人學習成果的檢驗，更希望能為其他對此領域感興趣的同儕提供參考，共同推動AI在生醫領域的普及與應用。這種樂於分享與協作的精神，亦是未來醫學工作中不可或缺的品質。</p>
+
+                    <h3 class="border-b border-yellow-500/50 pb-2 my-4">期望達成之學習目標</h3>
+                    <h4 class="text-yellow-400">知識層面 (Knowledge Acquisition)</h4>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong>阿茲海默症醫學知識：</strong>深入理解阿茲海默症的流行病學、風險因素、病理生理機制、臨床分期、診斷標準及治療現況。</li>
+                        <li><strong>AI/機器學習核心概念：</strong>系統學習監督式學習、非監督式學習等基本原理，並理解CNN、RNN等常見演算法。</li>
+                        <li><strong>生醫資料特性：</strong>熟悉基因體學、腦影像、臨床評估等不同模態數據的結構與分析挑戰。</li>
+                        <li><strong>AI醫療倫理與法規：</strong>學習AI在醫學應用中涉及的倫理原則、數據隱私、演算法偏見等議題。</li>
+                    </ul>
+                    
+                    <h4 class="text-yellow-400 mt-6">技能層面 (Skill Development)</h4>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong>程式設計與開發環境：</strong>熟練運用Python及其科學計算生態系（NumPy, Pandas, Scikit-learn, TensorFlow/Keras）和Google Colab平台。</li>
+                        <li><strong>資料獲取與管理：</strong>學習從ADNI、Kaggle等公開資料庫獲取數據。</li>
+                        <li><strong>資料前處理：</strong>精通結構化與影像數據的前處理技術，如數據清洗、標準化、編碼等。</li>
+                        <li><strong>特徵工程與選擇：</strong>學習提取、構建及選擇對模型預測最有價值的特徵。</li>
+                        <li><strong>AI模型建構與評估：</strong>能夠獨立建構、訓練、調優和比較不同AI模型，並使用AUC、F1-score等指標評估效能。</li>
+                        <li><strong>AutoML工具應用：</strong>學習使用AutoML平台進行自動化模型開發。</li>
+                        <li><strong>結果可視化與報告撰寫：</strong>掌握數據可視化技能並培養撰寫科學報告的能力。</li>
+                    </ul>
+
+                    <h3 class="border-b border-yellow-500/50 pb-2 my-4">研究完成後之預期收穫</h3>
+                     <h4 class="text-yellow-400">具體產出 (Tangible Outputs)</h4>
+                     <ul class="list-disc pl-5 space-y-2">
+                         <li><strong>完整的自主學習計畫成果展現：</strong>以本網頁應用程式的形式，全面呈現學習歷程、方法與成果。</li>
+                         <li><strong>可重現的AI模型與流程：</strong>建立一套或多套可用於AD早期偵測的AI模型，包含完整的程式碼與操作流程。</li>
+                         <li><strong>實用型簡易操作手冊：</strong>撰寫一份針對高中同儕的「AI醫學分析新手指南」，推廣AI在生醫領域的應用。</li>
+                         <li><strong>具競爭力的入學申請材料：</strong>本計畫成果將作為一份具備學術深度與實作能力的佐證資料。</li>
+                     </ul>
+
+                    <h4 class="text-yellow-400 mt-6">個人成長 (Personal Growth)</h4>
+                     <ul class="list-disc pl-5 space-y-2">
+                         <li><strong>科研熱情與嚴謹態度的塑造：</strong>透過完整的實作過程，點燃對醫學研究的熱情，並體會科學的嚴謹性。</li>
+                         <li><strong>科技倫理素養的深化：</strong>培養在追求技術創新的同時，兼顧人文關懷與社會責任的均衡視角。</li>
+                         <li><strong>探索精神與問題解決信心的增強：</strong>成功應對跨學科挑戰，將極大增強面對未知領域的勇氣與自信。</li>
+                         <li><strong>未來醫學之路的堅實基石：</strong>為未來在醫學領域的深入學習與發展奠定跨學科的堅實基礎。</li>
+                     </ul>
+                </div>
+            </div>
+
+            <div id="plan" class="tab-pane hidden">
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                        <div class="prose-dark max-w-none mb-4 md:mb-0">
+                            <p class="text-lg text-gray-400">本學習計畫自2025年9月1日至2026年1月15日，共計4.5個月，分為五個階段。請點擊各階段、各週次以展開詳細的每日學習任務。完成任務後，請勾選後方的方框以追蹤進度。您的進度將自動保存在本機瀏覽器中。</p>
+                        </div>
+                        <button id="generate-report-btn" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors whitespace-nowrap">產生進度報告</button>
+                    </div>
+                    
+                    <div id="plan-container" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <div id="assessment" class="tab-pane hidden">
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <div class="prose-dark max-w-none mb-6">
+                        <p class="text-lg text-gray-400">為驗收各學習階段的成果，這裡提供了針對每個月學習內容的測驗。每份測驗包含10個選擇題，旨在評估您對核心概念的掌握程度。完成測驗後，系統將立即顯示您的得分、結果分析圖表及評論，幫助您找出知識盲點並加以鞏固。</p>
+                    </div>
+                    <div id="assessment-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+            </div>
+
+            <div id="content" class="tab-pane hidden">
+                 <div class="bg-gray-800 p-6 rounded-lg">
+                    <div class="prose-dark max-w-none mb-6">
+                        <p class="text-lg text-gray-400">此頁面以互動式表格彙整了整個自主學習計畫中每日的學習任務與目標，讓您能以時間為軸線，一目了然地查看完整的學習路徑。您可以利用下方的篩選器快速跳至特定月份的學習內容。</p>
+                        <div class="my-4">
+                            <label for="month-filter" class="text-yellow-400 mr-2">篩選月份:</label>
+                            <select id="month-filter" class="bg-gray-700 text-white rounded p-2">
+                                <option value="all">所有月份</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table id="content-table" class="w-full text-sm text-left text-gray-400">
+                            <thead class="text-xs text-yellow-400 uppercase bg-gray-700">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">日期</th>
+                                    <th scope="col" class="px-6 py-3">學習任務</th>
+                                    <th scope="col" class="px-6 py-3">具體學習目標</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="charts" class="tab-pane hidden">
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <div class="prose-dark max-w-none mb-10">
+                        <p class="text-lg text-gray-400">本頁面提供自主學習計畫的視覺化分析圖表，幫助您更直觀地理解計畫的結構與重點分配。</p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="text-xl font-semibold text-yellow-300 mb-4 text-center">計畫階段時長分佈 (天)</h4>
+                            <div class="chart-container h-80 md:h-96">
+                                <canvas id="phase-duration-chart"></canvas>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold text-yellow-300 mb-4 text-center">學習主題投入分佈 (任務天數)</h4>
+                            <div class="chart-container h-80 md:h-96">
+                                <canvas id="effort-distribution-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="reflection" class="tab-pane hidden">
+                <div class="bg-gray-800 p-6 rounded-lg">
+                     <div class="prose-dark max-w-none">
+                        <h3 class="border-b border-yellow-500/50 pb-2 mb-4">研究心得與學習反思</h3>
+                        <p class="text-lg text-gray-400 mb-6">這份心得反思旨在總結整個自主學習計畫的歷程，從最初的構想到最終的成果實現，記錄下所遇到的挑戰、獲得的啟發，以及在知識、技能與個人素養上的成長。這不僅是對過去4.5個月努力的沉澱，更是對未來醫學之路的深刻思考。</p>
+
+                        <p>回顧這段為期四個半月的自主學習旅程，我深刻體會到，從零開始探索一個跨學科領域，是一場融合了興奮、挫折、探索與突破的深刻體驗。最初，「AI輔助阿茲海默症診斷」這個主題對我而言，僅是一個模糊而充滿魅力的概念，它連結了我對醫學的嚮往與對前沿科技的好奇。然而，隨著計畫的逐步推進，這個概念在我腦海中逐漸變得清晰、具體且充滿挑戰。</p>
+                        <p>在第一階段，我投入大量時間建構基礎知識體系。從阿茲海默症的病理機制——類澱粉樣蛋白的沉積與Tau蛋白的纏結，到AI醫療所涉及的複雜倫理議題，我意識到現代醫學早已不是單一學科的壁壘，而是需要整合生物、資訊、倫理等多維度視角的綜合性科學。學習Python程式設計的過程，則像是在學習一門新的語言，從變數、迴圈到函數，每一個語法結構都為我後續的數據分析工作鋪設了基石。這個階段最大的收穫，是學會了如何系統性地進行文獻檢索與閱讀，從浩如煙海的學術論文中篩選出關鍵資訊，並建構自己的知識筆記，這項技能無疑是未來學術生涯的「基本功」。</p>
+                        <p>進入第二階段，計畫的核心轉向了「動手做」。當我第一次從Kaggle下載到真實的腦部MRI影像資料集時，那種將理論知識與真實數據連結的興奮感至今難忘。然而，隨之而來的是資料前處理的巨大挑戰。「Garbage In, Garbage Out」這句數據科學領域的名言，我在這個階段有了切身體會。處理遺失值、標準化數據、正規化影像像素，這些看似繁瑣的步驟，每一步都直接關係到後續模型的成敗。學習Pandas和NumPy的過程，讓我從一個程式初學者，逐漸轉變為能夠駕馭數據的分析者。特別是在處理影像數據時，理解數據增強(Data Augmentation)的意義，讓我認識到在樣本有限的情況下，如何創造性地擴充數據集以提升模型泛化能力，這不僅是技術，更是一種解決問題的智慧。</p>
+                        <p>第三階段無疑是整個計畫的高潮——模型建構。我從最基礎的邏輯斯迴歸開始，一步步實作了隨機森林、支持向量機等傳統機器學習模型。這個過程讓我直觀地比較了不同演算法的優劣及其適用場景。然而，真正讓我感到震撼的是卷積神經網路(CNN)在影像辨識上的強大能力。當我使用Keras搭建起第一個CNN模型，看著它在訓練過程中，損失值(loss)不斷下降，準確率(accuracy)逐步攀升時，我真切地感受到了AI的力量。這個過程並非一帆風順，我遭遇了過擬合(overfitting)的困擾，並透過學習Dropout、L2正規化等技術來克服它。這段經歷讓我明白，AI模型的建構並非簡單地調用函式庫，而是一個不斷實驗、診斷、調優的科學過程，充滿了批判性思維與創造性解決方案的挑戰。</p>
+                        <p>第四階段，我探索了更進階的技術。遷移學習(Transfer Learning)的概念為我開啟了一扇新的大門，利用在大型數據集上預訓練好的模型，極大地提升了我在相對較小的AD數據集上的模型性能，這讓我深刻理解到「站在巨人肩膀上」的智慧。而AutoML工具的體驗，則讓我看到了AI發展的另一種可能性——自動化的機器學習流程，這使得非AI專家也能夠利用AI解決領域問題，預示著AI技術普及化的未來。在這個階段，我開始將所有實驗結果進行系統性的整理與比較，學習如何用數據和圖表（如ROC曲線、混淆矩陣）來客觀、清晰地呈現研究成果。</p>
+                        <p>最後的半個月，是沉澱與輸出的階段。撰寫研究報告與簡易操作手冊的過程，迫使我將腦中零散的知識點、程式碼片段和實驗結果，重新組織成一個有邏輯、有條理的完整體系。向「假想的同儕」解釋複雜的技術概念，讓我對知識的理解更加透徹。而撰寫心得反思，則是一次與自我的深度對話，梳理了這段旅程的心路歷程與成長軌跡。</p>
+                        <p>總結而言，這次自主學習計畫帶給我的，遠不止一份申請大學的材料。知識上，我從一個對AI與阿茲海默症僅有粗淺認識的門外漢，成長為能夠理解核心理論並具備初步實作能力的學習者。技能上，我掌握了Python數據科學的核心工具鏈，培養了從數據獲取、處理、建模到評估的完整能力。更重要的是在素養層面的蛻變：我學會了如何設定長期目標並將其拆解為可執行的短期任務；學會了如何在沒有老師手把手教導的情況下，利用線上資源獨立解決問題；學會了在面對挫折時保持耐心與毅力；更學會了在科技的浪潮中，時刻保有對倫理邊界的敬畏之心。</p>
+                        <p>這段經歷讓我更加堅信，未來的醫學，必然是與數據科學、人工智慧深度融合的「智慧醫療」。作為一名有志於此的未來醫者，僅有生物醫學知識是遠遠不夠的。掌握數據分析的能力、理解演算法的邏輯、並能將其應用於解決臨床問題，將是不可或缺的核心競爭力。這次自主學習，就是我為迎接這個未來所邁出的、堅實而有意義的第一步。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="references" class="tab-pane hidden">
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <div class="prose-dark max-w-none">
+                        <h3 class="border-b border-yellow-500/50 pb-2 mb-4">參考資料</h3>
+                        <p class="text-lg text-gray-400 mb-6">本計畫在規劃與執行過程中，參考了大量國內外學術文獻、技術報告與線上資源。此頁面將所有重要參考資料彙整於此，並盡可能提供可直接訪問的連結，以方便深入研究與查證。資料以中文文獻為優先，涵蓋阿茲海默症醫學、人工智慧技術、倫理法規及公開資料庫等多個方面。</p>
+                        <ul id="references-list" class="list-none space-y-4">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="quiz-modal" class="modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden visibility-hidden opacity-0">
+        <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-gray-700">
+                <h3 id="quiz-title" class="text-2xl font-bold text-yellow-400">學習評量測驗</h3>
+            </div>
+            <div id="quiz-content" class="p-6 overflow-y-auto">
+            </div>
+            <div class="p-6 border-t border-gray-700 text-right space-x-4">
+                 <button id="quiz-close-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">關閉</button>
+                 <button id="quiz-submit-btn" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-6 rounded-lg transition-colors">提交答案</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="report-modal" class="modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden visibility-hidden opacity-0">
+        <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-gray-700 flex justify-between items-center">
+                <h3 class="text-2xl font-bold text-yellow-400">自主學習進度報告</h3>
+                <button id="report-close-btn" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div id="report-content" class="p-6 overflow-y-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="text-xl font-semibold text-yellow-300 mb-4">整體進度概覽</h4>
+                        <div id="overall-progress-chart" class="chart-container h-64 md:h-80">
+                            <canvas id="overall-progress-canvas"></canvas>
+                        </div>
+                         <div id="overall-stats" class="mt-4 text-center"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-yellow-300 mb-4">各階段完成率</h4>
+                        <div id="monthly-progress-chart" class="chart-container h-64 md:h-80">
+                            <canvas id="monthly-progress-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8">
+                    <h4 class="text-xl font-semibold text-yellow-300 mb-4">詳細進度</h4>
+                    <div id="detailed-progress-text" class="bg-gray-900 p-4 rounded-lg max-h-64 overflow-y-auto text-sm font-mono"></div>
+                </div>
+            </div>
+            <div class="p-6 border-t border-gray-700 text-right">
+                <button id="download-report-btn" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors">下載文字報告</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const planData = [
+        {
+            month: "第一階段：醫學知識、AI倫理與研究方法學基礎 (2025年9月)",
+            monthGoal: "建立對阿茲海默症(AD)的基本醫學認知、理解AI醫療倫理、熟悉研究方法，並完成Python基礎學習。",
+            duration: 30, 
+            weeks: [
+                {
+                    week: "第一週：阿茲海默症概論與AI醫療倫理初探 (09/01 - 09/07)",
+                    weekGoal: "初步認識阿茲海默症的醫學背景，理解AI在醫療應用上的倫理框架，並建立Python開發環境。",
+                    days: [
+                        { date: "2025-09-01", task: "研讀自主學習計畫提案，確立研究方向與目標。", details: "再次熟悉研究動機、目的、步驟及預期成果，並記錄下初步疑問或想法。", category: "C6_PlanAdmin" },
+                        { date: "2025-09-02", task: "阿茲海默症基礎知識學習(一)。", details: "閱讀台灣失智症協會及維基百科資料，重點整理AD定義、流行病學、早期徵兆、病程分期及影響。", category: "C1_MedAI_Ethics" },
+                        { date: "2025-09-03", task: "阿茲海默症基礎知識學習(二) - 病理與風險。", details: "閱讀相關文獻，初步了解AD核心神經病理特徵(Aβ斑塊、tau蛋白纏結)及主要風險因素。", category: "C1_MedAI_Ethics" },
+                        { date: "2025-09-04", task: "AI醫療倫理與治理原則(一)。", details: "仔細閱讀WHO發布的指引，重點學習六項關鍵倫理原則，並思考其在AD診斷情境下的應用。", category: "C1_MedAI_Ethics" },
+                        { date: "2025-09-05", task: "AI醫療倫理與治理原則(二) - 台灣觀點。", details: "閱讀台灣相關文獻，了解本地AI醫療倫理議題、法規草案，並比較與國際指引的異同。", category: "C1_MedAI_Ethics" },
+                        { date: "2025-09-06", task: "Python程式設計環境建置。", details: "安裝Anaconda或熟悉Google Colab，成功執行第一個Python程式並嘗試簡單運算。", category: "C2_ProgTools" },
+                        { date: "2025-09-07", task: "本週學習內容複習與筆記整理。", details: "系統性回顧本週所學，將重點、疑問、心得整理成結構化的數位筆記。", category: "C6_PlanAdmin" },
+                    ]
+                },
+                {
+                    week: "第二週：Python程式設計基礎與文獻檢索 (09/08 - 09/14)",
+                    weekGoal: "掌握Python基本語法、資料型態、流程控制，並學習如何使用學術資料庫進行文獻檢索。",
+                    days: [
+                        { date: "2025-09-08", task: "Python核心語法(一) - 變數、資料型態與運算子。", details: "學習變數命名、主要資料型態(int, float, str, bool)及各類運算子。", category: "C2_ProgTools" },
+                        { date: "2025-09-09", task: "Python核心語法(二) - 容器型別(List, Tuple)。", details: "學習List和Tuple的創建、索引、切片與常用方法，理解其可變與不可變性。", category: "C2_ProgTools" },
+                        { date: "2025-09-10", task: "Python核心語法(三) - 容器型別(Dictionary, Set)。", details: "學習Dictionary的鍵值對操作與Set的集合運算及元素唯一性。", category: "C2_ProgTools" },
+                        { date: "2025-09-11", task: "Python核心語法(四) - 流程控制(if-else, for, while)。", details: "學習條件判斷、迴圈遍歷，以及break、continue語句的使用。", category: "C2_ProgTools" },
+                        { date: "2025-09-12", task: "Python核心語法(五) - 函數(Function)。", details: "學習函數的定義、呼叫、參數傳遞與回傳值，體會模組化編程思想。", category: "C2_ProgTools" },
+                        { date: "2025-09-13", task: "科學文獻檢索方法入門。", details: "學習使用Google Scholar、PubMed，構建檢索策略，並實際檢索相關中文综述文獻。", category: "C5_ResearchOutput" },
+                        { date: "2025-09-14", task: "本週學習內容複習與筆記整理。", details: "全面回顧本週學習的Python語法，整理程式碼範例，並初步篩選檢索到的文獻。", category: "C6_PlanAdmin" },
+                    ]
+                },
+                {
+                    week: "第三週：AD進階醫學知識與AI研究文獻閱讀 (09/15 - 09/21)",
+                    weekGoal: "深入了解AD的診斷標準、生物標記物，並開始閱讀AI在AD應用的學術論文。",
+                    days: [
+                        { date: "2025-09-15", task: "阿茲海默症的診斷與評估。", details: "學習DSM-V診斷標準，以及常用認知評估量表如MMSE、CDR的評分與判讀。", category: "C1_MedAI_Ethics" },
+                        { date: "2025-09-16", task: "阿茲海默症的生物標記物。", details: "重點整理CSF、影像(sMRI, PET)及血液生物標記物及其臨床意義。", category: "C1_MedAI_Ethics" },
+                        { date: "2025-09-17", task: "AI於AD診斷應用综述閱讀(一)。", details: "精讀一篇相關综述，重點關注AI利用的數據類型及其優缺點。", category: "C5_ResearchOutput" },
+                        { date: "2025-09-18", task: "AI於AD診斷應用综述閱讀(二)。", details: "繼續精讀文獻，重點關注具體AI模型、評估指標及研究現況與挑戰。", category: "C5_ResearchOutput" },
+                        { date: "2025-09-19", task: "AI於AD預後分析應用初探。", details: "檢索並閱讀相關文獻摘要，了解預後分析與早期偵測的區別。", category: "C5_ResearchOutput" },
+                        { date: "2025-09-20", task: "學習如何撰寫結構化文獻閱讀筆記。", details: "學習一種有效的筆記方法，並將本週精讀的文獻整理成結構化筆記。", category: "C5_ResearchOutput" },
+                        { date: "2025-09-21", task: "本週學習內容複習與文獻筆記整理。", details: "全面回顧本週所學，完善文獻筆記，深化對AI在AD研究應用的理解。", category: "C6_PlanAdmin" },
+                    ]
+                },
+                {
+                    week: "第四週：研究工具與資料庫介紹 (09/22 - 09/28)",
+                    weekGoal: "熟悉常用於生醫AI研究的工具平台與公開資料庫。",
+                    days: [
+                        { date: "2025-09-22", task: "Google Colab進階使用。", details: "深入學習掛載Google Drive、使用GPU/TPU、安裝外部套件及與GitHub整合。", category: "C2_ProgTools" },
+                        { date: "2025-09-23", task: "ADNI資料庫介紹與申請準備。", details: "瀏覽ADNI官網，了解其數據類型、共享政策及申請流程。", category: "C2_ProgTools" },
+                        { date: "2025-09-24", task: "Kaggle平台與AD資料集探索。", details: "熟悉Kaggle平台，搜尋並瀏覽與AD相關的公開資料集及分析範例。", category: "C2_ProgTools" },
+                        { date: "2025-09-25", task: "UCI Machine Learning Repository與AD資料集探索。", details: "瀏覽UCI資料庫，尋找並了解與AD相關的非影像類資料集。", category: "C2_ProgTools" },
+                        { date: "2025-09-26", task: "台灣生醫資料庫初探。", details: "初步了解台灣人體生物資料庫等本地資源及其申請條件與倫理要求。", category: "C2_ProgTools" },
+                        { date: "2025-09-27", task: "ChatGPT/大型語言模型(LLM)於研究輔助之應用探索。", details: "探索利用LLM輔助學習、生成程式碼片段、潤飾文字，並思考其優劣與風險。", category: "C2_ProgTools" },
+                        { date: "2025-09-28", task: "月末總結與下月計畫預習。", details: "總結本月學習成果，自我評估，並預習下一階段的資料前處理技術。", category: "C6_PlanAdmin" },
+                    ]
+                },
+                 {
+                    week: "第五週(月底補充)：第一階段總結與評量 (09/29 - 09/30)",
+                    weekGoal: "完成第一階段的總結，並透過測驗鞏固所學知識。",
+                    days: [
+                        { date: "2025-09-29", task: "第一階段內容總複習。", details: "重新梳理第一個月的所有學習筆記、程式碼與文獻，為評量做準備。", category: "C6_PlanAdmin" },
+                        { date: "2025-09-30", task: "完成第一階段學習評量測驗卷。", details: "進行測驗，並根據評量結果找出知識薄弱點，進行複習與反思。", category: "C6_PlanAdmin" },
+                    ]
+                }
+            ]
+        },
+        {
+            month: "第二階段：資料獲取、倫理深化與前處理技術 (2025年10月)",
+            monthGoal: "成功下載並探索AD資料集，深入理解AI倫理，掌握NumPy、Pandas及關鍵資料前處理技術。",
+            duration: 31,
+            weeks: [
+                {
+                    week: "第一週：公開資料集下載與Python資料分析套件 (10/01 - 10/05)",
+                    weekGoal: "實際下載一個AD資料集，並開始學習NumPy與Pandas。",
+                    days: [
+                        { date: "2025-10-01", task: "下載並初步檢視Kaggle阿茲海默症MRI資料集。", details: "完成一個AD MRI資料集的下載，並觀察其資料夾結構、檔案格式與命名方式。", category: "C3_DataHandling" },
+                        { date: "2025-10-02", task: "NumPy套件學習(一) - 陣列創建與屬性。", details: "學習NumPy ndarray物件，掌握多種創建陣列的方法及查詢陣列屬性。", category: "C2_ProgTools" },
+                        { date: "2025-10-03", task: "NumPy套件學習(二) - 陣列索引、切片與運算。", details: "學習NumPy陣列的索引、切片、向量化運算及常用數學函數。", category: "C2_ProgTools" },
+                        { date: "2025-10-04", task: "Pandas套件學習(一) - Series與DataFrame創建。", details: "學習Pandas核心數據結構Series和DataFrame，並掌握其創建方法。", category: "C2_ProgTools" },
+                        { date: "2025-10-05", task: "Pandas套件學習(二) - 資料讀取與基本操作。", details: "學習使用Pandas讀取CSV檔案，並對DataFrame進行基本的數據查看和選取。", category: "C2_ProgTools" },
+                    ]
+                },
+                {
+                    week: "第二週：數據倫理深化與Pandas進階 (10/06 - 10/12)",
+                    weekGoal: "探討資料偏誤、模型可解釋性等倫理議題，並掌握Pandas進階資料處理技巧。",
+                    days: [
+                        { date: "2025-10-06", task: "AI醫療中的數據偏誤(Data Bias)。", details: "深入閱讀相關文獻，了解偏誤來源、影響，並思考AD研究中可能的偏誤。", category: "C1_MedAI_Ethics" },
+                        { date: "2025-10-07", task: "AI模型的可解釋性與臨床信任。", details: "閱讀關於模型「黑箱」特性的討論，了解SHAP、LIME等解釋工具概念。", category: "C1_MedAI_Ethics" },
+                        { date: "2025-10-08", task: "Pandas進階操作(一) - 條件篩選與排序。", details: "學習基於多個條件的複雜數據篩選及按多個欄位排序。", category: "C2_ProgTools" },
+                        { date: "2025-10-09", task: "Pandas進階操作(二) - 分組與聚合。", details: "學習groupby操作，對數據分組並進行均值、總和、計數等聚合運算。", category: "C2_ProgTools" },
+                        { date: "2025-10-10", task: "Pandas進階操作(三) - 合併與重塑。", details: "學習使用merge和concat合併不同DataFrame，並初步了解pivot_table。", category: "C2_ProgTools" },
+                        { date: "2025-10-11", task: "Pandas資料視覺化初步。", details: "學習使用Pandas內建的繪圖功能進行簡單的視覺化，如折線圖、長條圖等。", category: "C2_ProgTools" },
+                        { date: "2025-10-12", task: "本週學習內容複習與思考。", details: "回顧數據倫理議題及Pandas進階操作，並將倫理考量融入研究思路。", category: "C6_PlanAdmin" },
+                    ]
+                },
+                {
+                    week: "第三週：資料前處理 - 基礎篇 (10/13 - 10/19)",
+                    weekGoal: "學習處理資料中的遺失值、異常值，以及資料型態轉換。",
+                    days: [
+                        { date: "2025-10-13", task: "資料前處理概述與重要性。", details: "理解為何資料前處理是機器學習流程中至關重要的一步，了解其主要任務。", category: "C3_DataHandling" },
+                        { date: "2025-10-14", task: "處理遺失值(Missing Values) (一)。", details: "學習使用Pandas檢測遺失值，並了解刪除遺失值的處理策略及其潛在問題。", category: "C3_DataHandling" },
+                        { date: "2025-10-15", task: "處理遺失值(二) - 填補策略。", details: "學習遺失值的填補方法，如使用均值、中位數、眾數進行填補。", category: "C3_DataHandling" },
+                        { date: "2025-10-16", task: "處理異常值(Outliers)。", details: "學習如何使用描述性統計或視覺化方法識別異常值，並了解其處理方法。", category: "C3_DataHandling" },
+                        { date: "2025-10-17", task: "資料標準化與正規化(一) - 原理。", details: "深入理解特徵縮放的重要性，掌握Min-Max正規化和Z-score標準化的原理。", category: "C3_DataHandling" },
+                        { date: "2025-10-18", task: "資料標準化與正規化(二) - Scikit-learn實作。", details: "學習使用Scikit-learn的MinMaxScaler和StandardScaler進行特徵縮放。", category: "C3_DataHandling" },
+                        { date: "2025-10-19", task: "本週學習內容複習與應用思考。", details: "回顧資料前處理技術，並初步規劃在AD資料集上的前處理流程。", category: "C6_PlanAdmin" },
+                    ]
+                },
+                {
+                    week: "第四週：資料前處理 - 影像篇與scikit-learn初探 (10/20 - 10/26)",
+                    weekGoal: "學習醫學影像特有的前處理步驟，並初步接觸scikit-learn。",
+                    days: [
+                        { date: "2025-10-20", task: "醫學影像資料前處理概述。", details: "了解常見的影像前處理步驟，如去噪、分割、配準等概念。", category: "C3_DataHandling" },
+                        { date: "2025-10-21", task: "影像大小調整與像素值正規化。", details: "學習為何需要將影像調整到統一尺寸，以及像素值正規化的方法。", category: "C3_DataHandling" },
+                        { date: "2025-10-22", task: "數據增強(Data Augmentation)概念。", details: "學習數據增強在擴充訓練集、提高模型泛化能力方面的重要性及常用技術。", category: "C3_DataHandling" },
+                        { date: "2025-10-23", task: "Scikit-learn套件初探。", details: "瀏覽Scikit-learn官網，了解其主要功能模組，如model_selection、preprocessing等。", category: "C2_ProgTools" },
+                        { date: "2025-10-24", task: "Scikit-learn中的資料集分割。", details: "學習使用train_test_split函數將數據集劃分為訓練集和測試集。", category: "C3_DataHandling" },
+                        { date: "2025-10-25", task: "資料標記(Data Labeling)與編碼。", details: "學習標籤編碼(Label Encoding)和獨熱編碼(One-Hot Encoding)及其適用場景。", category: "C3_DataHandling" },
+                        { date: "2025-10-26", task: "月末總結與下月計畫預習。", details: "總結本月學習成果，並預習下一階段的核心機器學習模型。", category: "C6_PlanAdmin" },
+                    ]
+                },
+                 {
+                    week: "第五週(月底補充)：第二階段總結與評量 (10/27 - 10/31)",
+                    weekGoal: "實際操作資料集，應用所學，並完成本階段評量。",
+                    days: [
+                        { date: "2025-10-27", task: "AD MRI資料集探索性數據分析(EDA) (一)。", details: "使用Pandas和NumPy對已下載的資料集進行初步探索，如查看類別分佈。", category: "C3_DataHandling" },
+                        { date: "2025-10-28", task: "AD MRI資料集探索性數據分析(EDA) (二)。", details: "對影像資料進行視覺化探索，如隨機顯示不同類別的樣本影像。", category: "C3_DataHandling" },
+                        { date: "2025-10-29", task: "影像前處理實作演練(一)。", details: "使用Pillow或OpenCV對少量樣本影像進行大小調整和灰階轉換。", category: "C3_DataHandling" },
+                        { date: "2025-10-30", task: "影像前處理實作演練(二)。", details: "練習對影像進行像素值正規化，並儲存處理後的影像。", category: "C3_DataHandling" },
+                        { date: "2025-10-31", task: "完成第二階段學習評量測驗卷。", details: "進行測驗，檢驗本月學習成效，並針對性複習。", category: "C6_PlanAdmin" },
+                    ]
+                }
+            ]
+        },
+        {
+            month: "第三階段：核心機器學習與深度學習模型實作 (2025年11月)",
+            monthGoal: "理解並實作傳統及深度學習模型，掌握特徵工程，熟悉模型評估流程。",
+            duration: 30,
+            weeks: [
+                {
+                    week: "第一週：傳統機器學習模型(一) - 邏輯斯迴歸 (11/01 - 11/07)",
+                    weekGoal: "理解邏輯斯迴歸原理，並使用scikit-learn實作。",
+                    days: [
+                        { date: "2025-11-01", task: "邏輯斯迴歸理論學習(一)。", details: "學習其基本原理，如何將線性迴歸輸出透過Sigmoid函數轉換為機率。", category: "C4_Modeling" },
+                        { date: "2025-11-02", task: "邏輯斯迴歸理論學習(二)。", details: "了解其成本函數(Log Loss)及梯度下降優化算法。", category: "C4_Modeling" },
+                        { date: "2025-11-03", task: "Scikit-learn邏輯斯迴歸實作(一) - 資料準備。", details: "選擇表格型數據集，進行前處理，並劃分訓練集與測試集。", category: "C4_Modeling" },
+                        { date: "2025-11-04", task: "Scikit-learn邏輯斯迴歸實作(二) - 模型訓練與預測。", details: "初始化模型，進行fit()、predict()和predict_proba()操作。", category: "C4_Modeling" },
+                        { date: "2025-11-05", task: "Scikit-learn邏輯斯迴歸實作(三) - 模型評估。", details: "使用accuracy_score、confusion_matrix、classification_report及ROC/AUC評估模型。", category: "C4_Modeling" },
+                        { date: "2025-11-06", task: "邏輯斯迴歸模型解釋與參數調整。", details: "嘗試解釋模型係數，並調整正規化強度C值觀察性能變化。", category: "C4_Modeling" },
+                        { date: "2025-11-07", task: "本週學習總結與筆記。", details: "整理邏輯斯迴歸的理論、實作程式碼、評估結果與心得。", category: "C6_PlanAdmin" },
+                    ]
+                },
+                 {
+                    week: "第二週：傳統機器學習模型(二) - 隨機森林與SVM (11/08 - 11/14)",
+                    weekGoal: "理解隨機森林和SVM原理，並使用scikit-learn實作。",
+                    days: [
+                        { date: "2025-11-08", task: "隨機森林(Random Forest)理論學習。", details: "學習決策樹概念及隨機森林作為集成學習方法的原理。", category: "C4_Modeling" },
+                        { date: "2025-11-09", task: "Scikit-learn隨機森林實作。", details: "使用RandomForestClassifier進行模型訓練、預測與評估，調整n_estimators等參數。", category: "C4_Modeling" },
+                        { date: "2025-11-10", task: "支持向量機(SVM)理論學習(一)。", details: "學習SVM尋找最大間隔超平面的基本思想及支持向量概念。", category: "C4_Modeling" },
+                        { date: "2025-11-11", task: "支持向量機理論學習(二) - 核函數與軟間隔。", details: "了解核技巧如何處理非線性問題，以及軟間隔和懲罰參數C的意義。", category: "C4_Modeling" },
+                        { date: "2025-11-12", task: "Scikit-learn SVM實作。", details: "使用SVC實現不同核函數的SVM分類模型，調整C和gamma參數。", category: "C4_Modeling" },
+                        { date: "2025-11-13", task: "傳統模型比較。", details: "比較邏輯斯迴歸、隨機森林、SVM在同一數據集上的性能表現。", category: "C4_Modeling" },
+                        { date: "2025-11-14", task: "本週學習總結與筆記。", details: "整理隨機森林和SVM的理論、實作程式碼、評估結果與比較心得。", category: "C6_PlanAdmin" },
+                    ]
+                },
+                 {
+                    week: "第三週：特徵工程與選擇 (11/15 - 11/21)",
+                    weekGoal: "學習特徵工程的重要性及常用方法，如Filter, Wrapper, Embedded methods。",
+                    days: [
+                        { date: "2025-11-15", task: "特徵工程(Feature Engineering)概念。", details: "理解為何特徵工程是機器學習流程的上限，了解其主要任務。", category: "C3_DataHandling" },
+                        { date: "2025-11-16", task: "特徵選擇(Feature Selection)概述。", details: "學習特徵選擇的目的及三大類方法：過濾法、包裹法、嵌入法。", category: "C3_DataHandling" },
+                        { date: "2025-11-17", task: "過濾法(Filter Methods)學習。", details: "了解其原理及常用工具，如VarianceThreshold、SelectKBest。", category: "C3_DataHandling" },
+                        { date: "2025-11-18", task: "包裹法(Wrapper Methods)學習。", details: "了解其原理及常用技術，如遞歸特徵消除(RFE)。", category: "C3_DataHandling" },
+                        { date: "2025-11-19", task: "嵌入法(Embedded Methods)學習。", details: "了解其原理及常用技術，如L1正規化、基於樹模型的特徵重要性。", category: "C3_DataHandling" },
+                        { date: "2025-11-20", task: "Scikit-learn特徵選擇實作。", details: "在AD數據集上實現至少一種過濾法和一種嵌入法，並評估其效果。", category: "C3_DataHandling" },
+                        { date: "2025-11-21", task: "本週學習總結與筆記。", details: "整理特徵選擇理論、方法比較、實作程式碼與心得。", category: "C6_PlanAdmin" },
+                    ]
+                },
+                 {
+                    week: "第四週：深度學習基礎與CNN實作 (11/22 - 11/28)",
+                    weekGoal: "理解神經網路、深度學習基本概念，並使用Keras/TensorFlow實作CNN於AD MRI影像分類。",
+                    days: [
+                        { date: "2025-11-22", task: "神經網路與深度學習基礎。", details: "學習人工神經元、激活函數、神經網路層級結構，理解深度學習與傳統ML的區別。", category: "C4_Modeling" },
+                        { date: "2025-11-23", task: "卷積神經網路(CNN)原理(一)。", details: "學習卷積層、濾波器的概念，理解卷積運算的過程。", category: "C4_Modeling" },
+                        { date: "2025-11-24", task: "CNN原理(二) - 池化層與全連接層。", details: "學習池化層的作用及典型CNN的整體架構。", category: "C4_Modeling" },
+                        { date: "2025-11-25", task: "Keras/TensorFlow環境準備與基礎。", details: "學習Keras的Sequential模型API，了解如何定義網路層。", category: "C4_Modeling" },
+                        { date: "2025-11-26", task: "Keras CNN實作(一) - 資料載入與預處理。", details: "使用ImageDataGenerator進行影像資料載入、批次處理、數據增強。", category: "C4_Modeling" },
+                        { date: "2025-11-27", task: "Keras CNN實作(二) - 模型搭建、編譯與訓練。", details: "搭建一個簡單的CNN模型，選擇激活函數、損失函數、優化器，並進行訓練。", category: "C4_Modeling" },
+                        { date: "2025-11-28", task: "Keras CNN實作(三) - 模型評估與視覺化。", details: "評估訓練好的CNN模型，計算混淆矩陣，繪製準確率/損失曲線。", category: "C4_Modeling" },
+                    ]
+                },
+                 {
+                    week: "第五週(月底補充)：RNN初探與模型評估指標深化 (11/29 - 11/30)",
+                    weekGoal: "初步了解RNN原理，深入學習模型評估指標。",
+                    days: [
+                        { date: "2025-11-29", task: "循環神經網路(RNN)原理初探。", details: "學習RNN基本結構、記憶概念，並思考其在AD研究中的應用場景。", category: "C4_Modeling" },
+                        { date: "2025-11-30", task: "完成第三階段學習評量測驗卷。", details: "進行測驗，檢驗本月學習成效，並針對性複習。", category: "C6_PlanAdmin" },
+                    ]
+                }
+            ]
+        },
+        {
+            month: "第四階段：進階模型優化、AutoML與結果分析 (2025年12月)",
+            monthGoal: "學習模型調優技巧，探索遷移學習與AutoML，比較模型表現並開始撰寫報告。",
+            duration: 31,
+            weeks: [
+                {
+                    week: "第一週：模型優化與遷移學習 (12/01 - 12/07)",
+                    weekGoal: "學習超參數調整、Dropout等優化技巧，並了解遷移學習。",
+                    days: [
+                        { date: "2025-12-01", task: "超參數調整(Hyperparameter Tuning)概念。", details: "學習網格搜索、隨機搜索等超參數調整方法的基本思想。", category: "C4_Modeling" },
+                        { date: "2025-12-02", task: "正規化(Regularization)與Dropout。", details: "深入學習L1/L2正規化及Dropout技術在防止過擬合中的作用。", category: "C4_Modeling" },
+                        { date: "2025-12-03", task: "遷移學習(Transfer Learning)概念。", details: "學習遷移學習的思想，如何利用預訓練模型提升性能、節省時間。", category: "C4_Modeling" },
+                        { date: "2025-12-04", task: "Keras遷移學習實作(一) - 載入預訓練模型。", details: "學習使用Keras載入VGG16或ResNet50等預訓練模型，並凍結其權重。", category: "C4_Modeling" },
+                        { date: "2025-12-05", task: "Keras遷移學習實作(二) - 添加自定義層與訓練。", details: "在預訓練模型基礎上添加新的分類層，並使用AD數據集進行訓練。", category: "C4_Modeling" },
+                        { date: "2025-12-06", task: "Keras遷移學習實作(三) - 微調(Fine-tuning)。", details: "嘗試解凍預訓練模型的部分頂層，並以較小學習率進行微調。", category: "C4_Modeling" },
+                        { date: "2025-12-07", task: "本週學習總結與模型比較。", details: "整理模型優化技巧筆記，並比較自建CNN與遷移學習模型的性能。", category: "C6_PlanAdmin" },
+                    ]
+                },
+                {
+                    week: "第二週：AutoML探索與模型綜合比較 (12/08 - 12/14)",
+                    weekGoal: "學習並實作AutoML工具，並對所有已建構的模型進行綜合性比較。",
+                    days: [
+                        { date: "2025-12-08", task: "AutoML概念與平台介紹。", details: "學習AutoML如何自動化機器學習流程，了解Google Vertex AI AutoML等平台。", category: "C4_Modeling" },
+                        { date: "2025-12-09", task: "AutoML實作(一) - 資料準備與上傳。", details: "學習如何將AD MRI影像資料集整理成符合AutoML平台要求的格式並上傳。", category: "C4_Modeling" },
+                        { date: "2025-12-10", task: "AutoML實作(二) - 模型訓練與部署。", details: "在AutoML平台上啟動影像分類模型的訓練任務，並了解其訓練過程。", category: "C4_Modeling" },
+                        { date: "2025-12-11", task: "AutoML實作(三) - 結果評估與分析。", details: "分析AutoML平台提供的模型評估報告，理解其性能指標與模型架構。", category: "C4_Modeling" },
+                        { date: "2025-12-12", task: "模型綜合比較與分析。", details: "系統性比較傳統ML模型、自建CNN、遷移學習模型及AutoML模型在同一任務上的性能。", category: "C4_Modeling" },
+                        { date: "2025-12-13", task: "結果可視化。", details: "使用Matplotlib/Seaborn創建比較圖表，如長條圖比較各模型AUC，或繪製最佳模型的混淆矩陣。", category: "C5_ResearchOutput" },
+                        { date: "2025-12-14", task: "本週學習總結。", details: "整理AutoML實作經驗與模型綜合比較的結論。", category: "C6_PlanAdmin" },
+                    ]
+                },
+                {
+                    week: "第三週：研究報告與操作手冊撰寫 (12/15 - 12/21)",
+                    weekGoal: "開始撰寫最終的研究報告初稿和簡易操作手冊的架構。",
+                    days: [
+                        { date: "2025-12-15", task: "研究報告結構規劃。", details: "規劃報告的章節，包括前言、文獻回顧、研究方法、結果、討論、結論。", category: "C5_ResearchOutput" },
+                        { date: "2025-12-16", task: "撰寫研究報告 - 前言與文獻回顧。", details: "基於先前的學習筆記，撰寫研究動機、目的及相關領域研究綜述。", category: "C5_ResearchOutput" },
+                        { date: "2025-12-17", task: "撰寫研究報告 - 研究方法。", details: "詳細描述使用的資料集、數據前處理流程、特徵工程以及所有模型的建構細節。", category: "C5_ResearchOutput" },
+                        { date: "2025-12-18", task: "撰寫研究報告 - 結果。", details: "將所有模型的性能評估數據和圖表整理進報告，並用文字清晰描述。", category: "C5_ResearchOutput" },
+                        { date: "2025-12-19", task: "操作手冊架構規劃。", details: "規劃「AI醫學分析新手指南」的章節，使其對同儕清晰易懂。", category: "C5_ResearchOutput" },
+                        { date: "2025-12-20", task: "撰寫操作手冊 - 環境設置與數據獲取。", details: "撰寫如何在Google Colab中設置環境及從Kaggle下載數據的步驟。", category: "C5_ResearchOutput" },
+                        { date: "2025-12-21", task: "本週進度檢討與修改。", details: "回顧本週撰寫的內容，進行初步的修改與潤飾。", category: "C6_PlanAdmin" },
+                    ]
+                },
+                {
+                    week: "第四週：報告與手冊內容完善 (12/22 - 12/28)",
+                    weekGoal: "繼續完善研究報告與操作手冊的內容，並探討倫理議題。",
+                    days: [
+                        { date: "2025-12-22", task: "撰寫研究報告 - 討論與結論。", details: "分析研究結果的意義，討論模型的優缺點、限制，並總結研究貢獻。", category: "C5_ResearchOutput" },
+                        { date: "2025-12-23", task: "撰寫研究報告 - AI倫理議題探討。", details: "在報告中加入一個獨立章節，深入探討本次研究中遇到的數據偏見、模型可解釋性等倫理問題。", category: "C1_MedAI_Ethics" },
+                        { date: "2025-12-24", task: "撰寫操作手冊 - 數據前處理與模型訓練。", details: "以一個簡單模型為例，逐步介紹數據前處理和模型訓練的程式碼與解釋。", category: "C5_ResearchOutput" },
+                        { date: "2025-12-25", task: "報告與手冊全文校對。", details: "對已完成的初稿進行第一次完整的校對，檢查語法、錯字和邏輯流暢性。", category: "C5_ResearchOutput" },
+                        { date: "2025-12-26", task: "尋求同儕或師長回饋(模擬)。", details: "將報告初稿提供給他人閱讀，模擬尋求回饋，並記錄可能的修改建議。", category: "C6_PlanAdmin" },
+                        { date: "2025-12-27", task: "成果展示網頁初步規劃。", details: "思考如何在本互動式網頁中，最好地呈現所有學習成果。", category: "C5_ResearchOutput" },
+                        { date: "2025-12-28", task: "完成第四階段學習評量測驗卷。", details: "進行測驗，檢驗本月學習成效。", category: "C6_PlanAdmin" },
+                    ]
+                },
+                {
+                    week: "第五週(月底補充)：年度總結 (12/29 - 12/31)",
+                    weekGoal: "進行年度總結與新年規劃。",
+                    days: [
+                        { date: "2025-12-29", task: "第四階段內容總複習。", details: "重新梳理模型優化、AutoML、報告撰寫等內容。", category: "C6_PlanAdmin" },
+                        { date: "2025-12-30", task: "2025年度學習總結。", details: "回顧從九月開始至今的學習歷程，總結年度最大收穫與成長。", category: "C6_PlanAdmin" },
+                        { date: "2025-12-31", task: "規劃最後衝刺階段。", details: "為最後半個月的計畫收尾工作制定詳細的執行清單。", category: "C6_PlanAdmin" },
+                    ]
+                }
+            ]
+        },
+        {
+            month: "第五階段：最終成果彙整、反思與發表 (2026年1月)",
+            monthGoal: "完成所有研究產出，進行深度反思，並將成果整合至本網頁應用程式。",
+            duration: 15,
+            weeks: [
+                {
+                    week: "第一週：成果定稿與網頁整合 (01/01 - 01/07)",
+                    weekGoal: "完成研究報告與操作手冊的最終定稿，並將內容整合進網頁。",
+                    days: [
+                        { date: "2026-01-01", task: "研究報告最終修訂。", details: "根據先前的校對與回饋，對研究報告進行最後的修改與潤飾。", category: "C5_ResearchOutput" },
+                        { date: "2026-01-02", task: "操作手冊最終修訂。", details: "確保操作手冊的每一步驟都清晰無誤，程式碼可直接運行。", category: "C5_ResearchOutput" },
+                        { date: "2026-01-03", task: "撰寫「心得反思」頁面內容。", details: "撰寫約2000字的學習心得與反思，總結整個計畫的個人成長。", category: "C5_ResearchOutput" },
+                        { date: "2026-01-04", task: "整理「參考資料」頁面。", details: "將所有參考文獻格式化，並添加有效連結，整合至網頁。", category: "C5_ResearchOutput" },
+                        { date: "2026-01-05", task: "更新「首頁」與「學習內容」頁面。", details: "確保所有頁面內容都是最終版本，並與其他部分保持一致。", category: "C5_ResearchOutput" },
+                        { date: "2026-01-06", task: "網頁功能最終測試與除錯。", details: "全面測試網頁的所有互動功能，如進度追蹤、評量、報告生成等。", category: "C5_ResearchOutput" },
+                        { date: "2026-01-07", task: "網頁UI/UX最終打磨。", details: "調整網頁的視覺細節，確保在不同設備上都有良好的顯示效果。", category: "C5_ResearchOutput" },
+                    ]
+                },
+                {
+                    week: "第二週：最終審查與發表準備 (01/08 - 01/15)",
+                    weekGoal: "進行計畫的最終全面審查，並完成發表準備。",
+                    days: [
+                        { date: "2026-01-08", task: "計畫成果全面自我審查(一)。", details: "從頭到尾完整地檢視整個計畫，檢查是否有邏輯矛盾或遺漏之處。", category: "C6_PlanAdmin" },
+                        { date: "2026-01-09", task: "計畫成果全面自我審查(二)。", details: "模擬作為大學審查教授，批判性地審視這份成果的優點與不足。", category: "C6_PlanAdmin" },
+                        { date: "2026-01-10", task: "準備成果口頭報告簡報(模擬)。", details: "製作一份簡報，練習如何在10分鐘內清晰地介紹整個計畫的亮點。", category: "C5_ResearchOutput" },
+                        { date: "2026-01-11", task: "程式碼整理與註解。", details: "將所有實作的Python Notebook程式碼整理乾淨，添加必要的註解。", category: "C5_ResearchOutput" },
+                        { date: "2026-01-12", task: "將程式碼上傳至GitHub。", details: "建立一個GitHub專案，將本網頁應用程式及相關程式碼上傳，並撰寫README文件。", category: "C5_ResearchOutput" },
+                        { date: "2026-01-13", task: "最終學習筆記歸檔。", details: "將四個半月以來所有的數位筆記、文獻、資料整理歸檔，以備查閱。", category: "C5_ResearchOutput" },
+                        { date: "2026-01-14", task: "計畫完成慶祝與放鬆。", details: "為自己完成一項艱鉅而有意義的長期計畫而慶祝。", category: "C6_PlanAdmin" },
+                        { date: "2026-01-15", task: "展望未來：下一步學習計畫。", details: "基於本次經驗，思考未來在大學階段希望深入研究的方向。", category: "C6_PlanAdmin" },
+                    ]
+                }
+            ]
+        }
+    ];
+
+    const quizData = [
+        {
+            title: "第一階段 (9月) 學習評量",
+            questions: [
+                { q: "根據本月學習內容，阿茲海默症最核心的神經病理特徵是？", a: ["神經元發炎和腦部水腫", "多巴胺系統失調", "類澱粉樣蛋白(Aβ)斑塊與Tau蛋白神經纖維纏結", "腦血管硬化與阻塞"], correct: 2 },
+                { q: "WHO提出的AI醫療倫理原則不包含以下哪一項？", a: ["確保包納性和公平性", "促進人類福祉與安全", "強化責任和課責制度", "追求模型最高準確率"], correct: 3 },
+                { q: "在Python中，哪種資料型態的元素是不可變的(immutable)？", a: ["List (串列)", "Tuple (元組)", "Dictionary (字典)", "Set (集合)"], correct: 1 },
+                { q: "使用Google Colab時，若要使用免費的GPU加速，應在哪裡設定？", a: ["檔案 -> 新增筆記本", "編輯 -> 筆記本設定", "執行階段 -> 變更執行階段類型", "工具 -> 指令面板"], correct: 2 },
+                { q: "在進行學術文獻檢索時，使用布林運算子 'AND' 的作用是？", a: ["擴大檢索範圍，包含任一關鍵字即可", "縮小檢索範圍，必須同時包含所有關鍵字", "排除特定關鍵字", "尋找同義詞"], correct: 1 },
+                { q: "臨床上常用來評估失智嚴重程度的量表是？", a: ["MMSE 和 CDR", "BMI 和 血壓", "EEG 和 EKG", "APOE 和 p-Tau"], correct: 0 },
+                { q: "以下何者屬於阿茲海默症的影像生物標記物？", a: ["腦脊髓液中的Aβ42濃度", "血液中的p-Tau217濃度", "結構性MRI顯示的海馬迴萎縮", "APOE ε4基因型"], correct: 2 },
+                { q: "在Python中，`for i in range(5):` 這個迴圈會執行幾次？", a: ["4次", "5次", "6次", "無限次"], correct: 1 },
+                { q: "在Anaconda環境中，常用來管理套件的指令是？", a: ["pip", "git", "conda", "python"], correct: 2 },
+                { q: "閱讀一篇AI應用的學術論文時，哪個部分最能快速了解其研究目的、方法與主要發現？", a: ["摘要 (Abstract)", "參考文獻 (References)", "致謝 (Acknowledgements)", "附錄 (Appendix)"], correct: 0 }
+            ]
+        },
+        {
+            title: "第二階段 (10月) 學習評量",
+            questions: [
+                { q: "在Pandas中，通常使用哪個函數來讀取CSV檔案？", a: ["pd.load_csv()", "pd.open_csv()", "pd.read_csv()", "pd.get_csv()"], correct: 2 },
+                { q: "AI模型訓練時，若訓練資料中某個族群的代表性不足，可能導致什麼問題？", a: ["數據洩漏 (Data Leakage)", "模型欠擬合 (Underfitting)", "數據偏誤 (Data Bias)", "維度災難 (Curse of Dimensionality)"], correct: 2 },
+                { q: "在Pandas DataFrame中，要選取第1列到第3列的資料，應使用哪個語法？", a: ["df.loc[0:2]", "df.iloc[0:3]", "df.get(0,3)", "df.select(0-3)"], correct: 1 },
+                { q: "處理遺失值時，使用均值(mean)填補最不適合哪種情況？", a: ["數據大致呈常態分佈", "數據中有極端異常值(outliers)", "數據為連續數值型", "遺失比例不高"], correct: 1 },
+                { q: "Min-Max正規化的主要目的是什麼？", a: ["將數據轉換為均值為0，標準差為1", "將數據縮放到一個固定的區間，如[0, 1]", "移除數據中的異常值", "將類別數據轉換為數值"], correct: 1 },
+                { q: "在影像前處理中，數據增強(Data Augmentation)的主要作用是？", a: ["提高影像解析度", "減少影像雜訊", "擴充訓練集，防止模型過擬合", "加快模型訓練速度"], correct: 2 },
+                { q: "使用`sklearn.model_selection.train_test_split`函數時，`random_state`參數的作用是？", a: ["設定測試集的大小比例", "確保每次分割結果都相同，以利重現實驗", "隨機打亂數據順序", "指定要分割的特徵欄位"], correct: 1 },
+                { q: "對於'性別'這樣的類別特徵('男', '女')，轉換成(0, 1)是哪種編碼方式？", a: ["獨熱編碼 (One-Hot Encoding)", "標籤編碼 (Label Encoding)", "Z-score標準化", "特徵雜湊 (Feature Hashing)"], correct: 1 },
+                { q: "在NumPy中，要查詢一個陣列的維度(例如(3, 4))，應使用哪個屬性？", a: ["array.size", "array.ndim", "array.dtype", "array.shape"], correct: 3 },
+                { q: "模型的可解釋性(Interpretability)在醫療AI中為何重要？", a: ["可以讓模型跑得更快", "有助於建立醫生的信任並理解模型決策依據", "是所有AI模型的基本要求", "能保證模型100%準確"], correct: 1 }
+            ]
+        },
+        {
+            title: "第三階段 (11月) 學習評量",
+            questions: [
+                { q: "邏輯斯迴歸(Logistic Regression)主要用於解決哪一類問題？", a: ["迴歸 (Regression)", "分類 (Classification)", "聚類 (Clustering)", "降維 (Dimensionality Reduction)"], correct: 1 },
+                { q: "隨機森林(Random Forest)是基於哪種基本模型建構的集成學習方法？", a: ["支持向量機 (SVM)", "線性迴歸 (Linear Regression)", "K-近鄰 (K-NN)", "決策樹 (Decision Tree)"], correct: 3 },
+                { q: "在支持向量機(SVM)中，核技巧(Kernel Trick)的主要作用是？", a: ["加速模型訓練", "處理非線性可分的數據", "防止模型過擬合", "選擇最重要的特徵"], correct: 1 },
+                { q: "特徵選擇中的「包裹法」(Wrapper method)有什麼特點？", a: ["獨立於模型，速度快", "將特徵選擇嵌入模型訓練中", "將模型性能作為評估特徵子集的標準", "只適用於線性模型"], correct: 2 },
+                { q: "卷積神經網路(CNN)中的卷積層主要作用是什麼？", a: ["進行分類", "減少參數數量", "特徵提取", "將數據攤平"], correct: 2 },
+                { q: "在Keras中，搭建一個最簡單的順序模型，應該使用哪個API？", a: ["keras.Model", "keras.Sequential", "keras.layers.Functional", "keras.Input"], correct: 1 },
+                { q: "在評估分類模型時，ROC曲線下的面積(AUC)值越接近多少表示模型性能越好？", a: ["0", "0.5", "1", "-1"], correct: 2 },
+                { q: "以下哪種方法不屬於特徵選擇？", a: ["遞歸特徵消除(RFE)", "卡方檢驗", "Z-score標準化", "基於L1正規化的選擇"], correct: 2 },
+                { q: "CNN中的池化層(Pooling Layer)的主要作用之一是？", a: ["增加特徵圖的維度", "降低特徵圖的空間尺寸(降維)", "學習更複雜的特徵", "防止梯度消失"], correct: 1 },
+                { q: "在數據不平衡的情況下，哪個評估指標可能具有誤導性？", a: ["準確率 (Accuracy)", "精確率 (Precision)", "召回率 (Recall)", "F1-Score"], correct: 0 }
+            ]
+        },
+        {
+            title: "第四階段 (12月) 學習評量",
+            questions: [
+                { q: "在神經網路中，Dropout技術的主要目的是？", a: ["加快訓練速度", "增加模型複雜度", "防止模型過擬合", "提高模型的記憶能力"], correct: 2 },
+                { q: "遷移學習(Transfer Learning)的核心思想是？", a: ["從頭開始訓練一個新模型", "將多個模型結果結合", "將在大型數據集上學到的知識應用於新任務", "自動化地尋找最佳模型"], correct: 2 },
+                { q: "使用Keras進行遷移學習時，通常會對載入的預訓練模型做什麼初始操作？", a: ["隨機初始化所有權重", "凍結卷積基層的權重", "刪除所有卷積層", "只保留最後的全連接層"], correct: 1 },
+                { q: "AutoML的主要優勢是什麼？", a: ["保證找到全域最優解", "自動化機器學習流程，降低技術門檻", "完全不需要數據前處理", "生成的模型總是比手動調參好"], correct: 1 },
+                { q: "在撰寫研究報告時，「研究方法」部分應包含什麼內容？", a: ["研究動機與目的", "對結果的詳細討論", "使用的資料集、前處理流程與模型細節", "未來的研究方向"], correct: 2 },
+                { q: "對遷移學習模型進行「微調」(Fine-tuning)時，通常會使用什麼樣的學習率？", a: ["一個非常大的學習率", "一個比初始訓練時更小的學習率", "固定的學習率1.0", "不需要設定學習率"], correct: 1 },
+                { q: "以下哪個不是常用的預訓練CNN模型？", a: ["VGG16", "ResNet50", "AutoEncoder", "InceptionV3"], correct: 2 },
+                { q: "網格搜索(Grid Search)這種超參數調整方法的缺點是什麼？", a: ["搜索速度快", "可能會陷入局部最優", "計算成本非常高，特別是當參數多時", "只能用於線性模型"], correct: 2 },
+                { q: "在報告中討論AI倫理議題時，應關注以下哪個方面？", a: ["數據隱私與偏見", "模型的可解釋性", "演算法的公平性", "以上皆是"], correct: 3 },
+                { q: "為什麼在比較不同模型性能時，需要在同一個測試集上進行評估？", a: ["為了讓所有模型都得到高分", "確保評估標準一致，使比較公平", "因為訓練集數據有雜訊", "測試集數據比較乾淨"], correct: 1 }
+            ]
+        }
+    ];
+    
+    const referencesData = [
+        { id: 1, text: "您提供的PDF文件: AI輔助阿茲海默症早期偵測與預後分析-整合生醫資料與人工智慧的自主學習研究", link: null },
+        { id: 2, text: "AI in dementia care", link: "https://journal.jpma.org.pk/Data/Issues/1712_27052024_OA_11.pdf" },
+        { id: 3, text: "Alzheimer disease: an overview of its clinical presentation and pathogenesis", link: "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10789721/" },
+        { id: 4, text: "2024 Alzheimer's disease research summary: A year in review", link: "https://www.alz.org/media/documents/alzheimers-dementia-2024-research-summary.pdf" },
+        { id: 5, text: "阿茲海默症 - 維基百科，自由的百科全書", link: "https://zh.wikipedia.org/wiki/%E9%98%BF%E8%8C%B2%E6%B5%B7%E9%BB%98%E7%97%87" },
+        { id: 6, text: "認識失智症與簡易失智18分檢測表", link: "https://www.mohw.gov.tw/dl-77292-0309a473-1991-450f-b258-29472e39ee4c.html" },
+        { id: 7, text: "Pharmacological Treatment of Alzheimer’s Disease: An Update", link: "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9318991/" },
+        { id: 8, text: "深度學習(Deep Learning)介紹，一篇帶你從頭了解！", link: "https://www.largitdata.com/blog/20" },
+        { id: 9, text: "機器學習(Machine Learning)是什麼？一篇帶你了解！", link: "https://www.largitdata.com/blog/2" },
+        { id: 10, text: "Alzheimer's Disease Neuroimaging Initiative (ADNI)", link: "https://www.kaggle.com/datasets/adni/adni" },
+        { id: 11, text: "世卫组织发布人工智能用于健康促进的伦理与治理指南", link: "https://www.who.int/zh/news/item/28-06-2021-who-issues-first-global-report-on-ai-in-health-and-six-guiding-principles-for-its-design-and-use" },
+        { id: 12, text: "運用人工智慧技術於醫療的法律風險與隱憂－利弊互現", link: "https://www.sasc.gov.tw/Uploads/laws/20230531142502844111.pdf" },
+        { id: 13, text: "Google Colab", link: "https://colab.research.google.com/" },
+        { id: 14, text: "Google Colab 是什麼？給新手的入門教學（功能／付費／使用教學）", link: "https://www.learncodewithmike.com/2023/04/google-colab-tutorial.html" },
+        { id: 15, text: "ADNI :: Alzheimer's Disease Neuroimaging Initiative", link: "https://adni.loni.usc.edu/" },
+        { id: 16, text: "ADNI数据下载教学（超详细）", link: "https://zhuanlan.zhihu.com/p/623253724" },
+        { id: 17, text: "Alzheimer's Disease and Healthy Aging Data in US", link: "https://www.kaggle.com/datasets/gleasonelliot/alzheimers-and-healthy-aging-data-in-us" }
+    ];
+
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    const planContainer = document.getElementById('plan-container');
+    const assessmentContainer = document.getElementById('assessment-container');
+    const referencesList = document.getElementById('references-list');
+    const contentTableBody = document.querySelector('#content-table tbody');
+    const monthFilter = document.getElementById('month-filter');
+    let phaseDurationChartInstance = null;
+    let effortDistributionChartInstance = null;
+
+    function init() {
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const target = button.dataset.target;
+
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                tabPanes.forEach(pane => {
+                    if (pane.id === target) {
+                        pane.classList.remove('hidden');
+                        pane.classList.add('active');
+                        if (target === 'charts') {
+                            renderAnalysisCharts();
+                        }
+                    } else {
+                        pane.classList.add('hidden');
+                        pane.classList.remove('active');
+                    }
+                });
+            });
+        });
+
+        buildPlan();
+        buildAssessments();
+        buildReferences();
+        buildContentTable();
+        loadProgress();
+        setupModals();
+        setupReportGenerator();
+        setupTableFilter();
+    }
+    
+    function buildPlan() {
+        if (!planContainer) return;
+        planData.forEach((monthData, monthIndex) => {
+            const monthId = `month-${monthIndex}`;
+            const monthDiv = document.createElement('div');
+            monthDiv.className = 'border border-gray-700 rounded-lg';
+            monthDiv.innerHTML = `
+                <div class="accordion-header bg-gray-700/50 p-4 cursor-pointer flex justify-between items-center" data-target="${monthId}-content">
+                    <h3 class="text-xl font-semibold text-yellow-400">${monthData.month}</h3>
+                    <span class="icon text-yellow-400 text-2xl font-light"></span>
+                </div>
+                <div id="${monthId}-content" class="accordion-content">
+                    <div class="p-4 space-y-3">
+                        <p class="text-gray-400 italic"><strong>本月整體學習目標:</strong> ${monthData.monthGoal}</p>
+                    </div>
+                </div>`;
+            
+            const monthContent = monthDiv.querySelector(`#${monthId}-content .p-4`);
+
+            monthData.weeks.forEach((weekData, weekIndex) => {
+                const weekId = `${monthId}-week-${weekIndex}`;
+                const weekDiv = document.createElement('div');
+                weekDiv.className = 'border border-gray-600 rounded-md ml-4';
+                weekDiv.innerHTML = `
+                    <div class="accordion-header bg-gray-600/30 p-3 cursor-pointer flex justify-between items-center" data-target="${weekId}-content">
+                        <h4 class="font-medium text-yellow-300">${weekData.week}</h4>
+                        <span class="icon text-yellow-300 text-xl font-light"></span>
+                    </div>
+                    <div id="${weekId}-content" class="accordion-content">
+                        <div class="p-3 pl-4 space-y-2">
+                             <p class="text-gray-400 text-sm italic"><strong>本週學習小目標:</strong> ${weekData.weekGoal}</p>
+                        </div>
+                    </div>`;
+
+                const weekContent = weekDiv.querySelector(`#${weekId}-content .p-3`);
+
+                weekData.days.forEach(dayData => {
+                    const taskId = `task_${dayData.date}`;
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'py-2 pl-4 border-l-2 border-gray-700';
+                    dayDiv.innerHTML = `
+                        <div class="flex items-start">
+                            <input type="checkbox" id="${taskId}" onchange="trackProgress('${taskId}')" class="mt-1 mr-3 flex-shrink-0">
+                            <label for="${taskId}" class="flex-grow">
+                                <strong class="text-gray-200">${dayData.date}: ${dayData.task}</strong>
+                                <p class="text-gray-400 text-sm">${dayData.details}</p>
+                            </label>
+                        </div>
+                    `;
+                    weekContent.appendChild(dayDiv);
+                });
+
+                monthContent.appendChild(weekDiv);
+            });
+
+            planContainer.appendChild(monthDiv);
+        });
+
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = document.getElementById(header.dataset.target);
+                header.classList.toggle('open');
+                content.classList.toggle('open');
+            });
+        });
+    }
+
+    function buildAssessments() {
+        if (!assessmentContainer) return;
+        quizData.forEach((quiz, index) => {
+            const quizCard = document.createElement('div');
+            quizCard.className = 'bg-gray-700 p-6 rounded-lg flex flex-col items-center justify-center text-center';
+            quizCard.innerHTML = `
+                <h4 class="text-lg font-semibold text-yellow-300 mb-2">${quiz.title}</h4>
+                <p class="text-gray-400 mb-4 text-sm">共 ${quiz.questions.length} 題</p>
+                <button class="start-quiz-btn bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors" data-quiz-index="${index}">開始測驗</button>
+            `;
+            assessmentContainer.appendChild(quizCard);
+        });
+
+        document.querySelectorAll('.start-quiz-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                startQuiz(parseInt(button.dataset.quizIndex));
+            });
+        });
+    }
+
+    function buildReferences() {
+        if (!referencesList) return;
+        referencesData.forEach(ref => {
+            const listItem = document.createElement('li');
+            listItem.className = "bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500";
+            if(ref.link){
+                listItem.innerHTML = `<span class="font-bold text-gray-300">[${ref.id}]</span> ${ref.text} <a href="${ref.link}" target="_blank" class="ml-2 text-yellow-400 hover:text-yellow-300 font-semibold">[連結]</a>`;
+            } else {
+                listItem.innerHTML = `<span class="font-bold text-gray-300">[${ref.id}]</span> ${ref.text}`;
+            }
+            referencesList.appendChild(listItem);
+        });
+    }
+    
+    function buildContentTable() {
+        if(!contentTableBody || !monthFilter) return;
+        contentTableBody.innerHTML = '';
+        const monthOptions = new Set();
+
+        planData.forEach(monthData => {
+            const monthName = monthData.month.split('(')[0].trim();
+            monthOptions.add(monthName);
+            monthData.weeks.forEach(weekData => {
+                weekData.days.forEach(dayData => {
+                    const row = document.createElement('tr');
+                    row.className = 'bg-gray-800 border-b border-gray-700 hover:bg-gray-600/50';
+                    row.dataset.month = monthName;
+                    row.innerHTML = `
+                        <td class="px-6 py-4 font-medium text-gray-200 whitespace-nowrap">${dayData.date}</td>
+                        <td class="px-6 py-4">${dayData.task}</td>
+                        <td class="px-6 py-4 text-gray-400">${dayData.details}</td>
+                    `;
+                    contentTableBody.appendChild(row);
+                });
+            });
+        });
+        
+        monthOptions.forEach(month => {
+            const option = document.createElement('option');
+            option.value = month;
+            option.textContent = month;
+            monthFilter.appendChild(option);
+        });
+    }
+
+    function setupTableFilter() {
+        if (!monthFilter) return;
+        monthFilter.addEventListener('change', (e) => {
+            const selectedMonth = e.target.value;
+            const rows = contentTableBody.querySelectorAll('tr');
+            rows.forEach(row => {
+                if (selectedMonth === 'all' || row.dataset.month === selectedMonth) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    window.trackProgress = function(taskId) {
+        const checkbox = document.getElementById(taskId);
+        try {
+            localStorage.setItem(taskId, checkbox.checked);
+        } catch (e) {
+            console.error("無法存取 localStorage。進度追蹤功能將無法使用。", e);
+        }
+    }
+
+    function loadProgress() {
+        try {
+            planData.forEach(month => {
+                month.weeks.forEach(week => {
+                    week.days.forEach(day => {
+                        const taskId = `task_${day.date}`;
+                        const isCompleted = localStorage.getItem(taskId) === 'true';
+                        const checkbox = document.getElementById(taskId);
+                        if (checkbox) {
+                            checkbox.checked = isCompleted;
+                        }
+                    });
+                });
+            });
+        } catch (e) {
+            console.error("無法存取 localStorage。進度將無法載入。", e);
+        }
+    }
+
+    let quizChart = null;
+    function startQuiz(quizIndex) {
+        const modal = document.getElementById('quiz-modal');
+        const titleEl = document.getElementById('quiz-title');
+        const contentEl = document.getElementById('quiz-content');
+        const submitBtn = document.getElementById('quiz-submit-btn');
+
+        const currentQuiz = quizData[quizIndex];
+        titleEl.textContent = currentQuiz.title;
+
+        let questionsHtml = '<div class="space-y-6">';
+        currentQuiz.questions.forEach((q, i) => {
+            questionsHtml += `
+                <div class="text-gray-300">
+                    <p class="font-semibold mb-2">${i + 1}. ${q.q}</p>
+                    <div class="space-y-2 pl-4">`;
+            q.a.forEach((ans, ansIndex) => {
+                questionsHtml += `
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="q${i}" value="${ansIndex}" class="mr-3">
+                        <span>${ans}</span>
+                    </label>`;
+            });
+            questionsHtml += `</div></div>`;
+        });
+        questionsHtml += '</div>';
+        contentEl.innerHTML = questionsHtml;
+
+        submitBtn.style.display = 'inline-block';
+        submitBtn.onclick = () => submitQuiz(quizIndex);
+        
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0', 'visibility-hidden'), 10);
+    }
+    
+    function submitQuiz(quizIndex) {
+        const currentQuiz = quizData[quizIndex];
+        let score = 0;
+        currentQuiz.questions.forEach((q, i) => {
+            const selected = document.querySelector(`input[name="q${i}"]:checked`);
+            if (selected && parseInt(selected.value) === q.correct) {
+                score++;
+            }
+        });
+
+        const totalQuestions = currentQuiz.questions.length;
+        const percentage = (score / totalQuestions) * 100;
+
+        let analysisText = "";
+        if(percentage === 100) {
+            analysisText = "表現完美！您已完全掌握本階段的核心知識，請繼續保持！";
+        } else if (percentage >= 80) {
+            analysisText = "表現優異！您對大部分內容有很好的理解，可針對錯誤題目稍作複習。";
+        } else if (percentage >= 60) {
+            analysisText = "表現不錯！已掌握基本概念，但仍有部分知識點需要加強鞏固。";
+        } else {
+            analysisText = "仍有進步空間。建議您重新回顧本階段的學習內容，特別是答錯的題目所對應的知識點。";
+        }
+
+        const contentEl = document.getElementById('quiz-content');
+        contentEl.innerHTML = `
+            <div class="text-center">
+                <h4 class="text-2xl font-bold text-yellow-300 mb-2">評量結果</h4>
+                <p class="text-4xl font-bold text-white mb-4">${score} / ${totalQuestions}</p>
+                <div class="chart-container mx-auto" style="height: 250px; max-height: 250px;">
+                    <canvas id="quiz-result-chart"></canvas>
+                </div>
+                <p class="text-gray-400 mt-4">${analysisText}</p>
+            </div>
+        `;
+
+        const ctx = document.getElementById('quiz-result-chart').getContext('2d');
+        if (quizChart) {
+            quizChart.destroy();
+        }
+        quizChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['答對', '答錯'],
+                datasets: [{
+                    data: [score, totalQuestions - score],
+                    backgroundColor: ['#facc15', '#4b5563'],
+                    borderColor: '#1f2937',
+                    borderWidth: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#d1d5db' }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.label}: ${context.raw} 題`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        document.getElementById('quiz-submit-btn').style.display = 'none';
+    }
+
+    function setupModals() {
+        const quizModal = document.getElementById('quiz-modal');
+        const reportModal = document.getElementById('report-modal');
+
+        document.getElementById('quiz-close-btn').addEventListener('click', () => {
+             quizModal.classList.add('opacity-0', 'visibility-hidden');
+             setTimeout(() => quizModal.classList.add('hidden'), 300);
+        });
+        
+        document.getElementById('report-close-btn').addEventListener('click', () => {
+             reportModal.classList.add('opacity-0', 'visibility-hidden');
+             setTimeout(() => reportModal.classList.add('hidden'), 300);
+        });
+        
+        window.addEventListener('click', (event) => {
+            if (event.target === quizModal) {
+                 quizModal.classList.add('opacity-0', 'visibility-hidden');
+                 setTimeout(() => quizModal.classList.add('hidden'), 300);
+            }
+             if (event.target === reportModal) {
+                 reportModal.classList.add('opacity-0', 'visibility-hidden');
+                 setTimeout(() => reportModal.classList.add('hidden'), 300);
+            }
+        });
+    }
+    
+    let overallChart = null;
+    let monthlyChart = null;
+    function setupReportGenerator() {
+        document.getElementById('generate-report-btn').addEventListener('click', () => {
+            const reportModal = document.getElementById('report-modal');
+            const overallStatsEl = document.getElementById('overall-stats');
+            const detailedProgressEl = document.getElementById('detailed-progress-text');
+            
+            let totalTasks = 0;
+            let completedTasks = 0;
+            const monthlyProgress = {};
+            
+            planData.forEach((month, monthIndex) => {
+                let monthTotal = 0;
+                let monthCompleted = 0;
+                month.weeks.forEach(week => {
+                    week.days.forEach(day => {
+                        totalTasks++;
+                        monthTotal++;
+                        const taskId = `task_${day.date}`;
+                        if (localStorage.getItem(taskId) === 'true') {
+                            completedTasks++;
+                            monthCompleted++;
+                        }
+                    });
+                });
+                monthlyProgress[`第${monthIndex + 1}階段`] = (monthTotal > 0) ? (monthCompleted / monthTotal) * 100 : 0;
+            });
+            
+            const overallPercentage = (totalTasks > 0) ? (completedTasks / totalTasks) * 100 : 0;
+            overallStatsEl.innerHTML = `
+                <p class="text-lg text-gray-300">總任務數: ${totalTasks}</p>
+                <p class="text-lg text-gray-300">已完成: ${completedTasks}</p>
+                <p class="text-2xl font-bold text-yellow-400 mt-2">總完成率: ${overallPercentage.toFixed(1)}%</p>
+            `;
+            
+            let detailedText = '';
+            planData.forEach(month => {
+                detailedText += `\n--- ${month.month} ---\n`;
+                month.weeks.forEach(week => {
+                    week.days.forEach(day => {
+                        const taskId = `task_${day.date}`;
+                        const status = localStorage.getItem(taskId) === 'true' ? '[✔]' : '[ ]';
+                        detailedText += `${status} ${day.date}: ${day.task}\n`;
+                    });
+                });
+            });
+            detailedProgressEl.textContent = detailedText;
+            
+            if (overallChart) overallChart.destroy();
+            const overallCtx = document.getElementById('overall-progress-canvas').getContext('2d');
+            overallChart = new Chart(overallCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['已完成', '未完成'],
+                    datasets: [{
+                        data: [completedTasks, totalTasks - completedTasks],
+                        backgroundColor: ['#facc15', '#4b5563'],
+                        borderColor: '#1f2937', borderWidth: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            if (monthlyChart) monthlyChart.destroy();
+            const monthlyCtx = document.getElementById('monthly-progress-canvas').getContext('2d');
+            monthlyChart = new Chart(monthlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(monthlyProgress),
+                    datasets: [{
+                        label: '完成率 (%)',
+                        data: Object.values(monthlyProgress),
+                        backgroundColor: '#facc15',
+                        borderColor: '#fde047',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 100, ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+                        x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+            
+            document.getElementById('download-report-btn').onclick = () => {
+                const reportText = `自主學習進度報告\n\n` +
+                `總覽:\n` +
+                `總任務數: ${totalTasks}\n` +
+                `已完成: ${completedTasks}\n` +
+                `總完成率: ${overallPercentage.toFixed(1)}%\n` +
+                `------------------\n` +
+                `詳細進度:\n${detailedText}`;
+                
+                const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = '自主學習進度報告.txt';
+                link.click();
+            };
+
+            reportModal.classList.remove('hidden');
+            setTimeout(() => reportModal.classList.remove('opacity-0', 'visibility-hidden'), 10);
+        });
+    }
+
+    function renderAnalysisCharts() {
+        renderPhaseDurationChart();
+        renderEffortDistributionChart();
+    }
+
+    function renderPhaseDurationChart() {
+        const ctx = document.getElementById('phase-duration-chart');
+        if (!ctx) return;
+
+        if (phaseDurationChartInstance) {
+            phaseDurationChartInstance.destroy();
+        }
+
+        const phaseDurations = planData.map(phase => phase.duration);
+        const phaseLabels = planData.map((phase, index) => `第 ${index + 1} 階段`);
+
+        phaseDurationChartInstance = new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: phaseLabels,
+                datasets: [{
+                    label: '階段時長 (天)',
+                    data: phaseDurations,
+                    backgroundColor: [
+                        'rgba(250, 204, 21, 0.7)',  // amber-400
+                        'rgba(253, 224, 71, 0.7)',  // yellow-400
+                        'rgba(254, 240, 138, 0.7)', // yellow-300
+                        'rgba(250, 204, 21, 0.5)',  // amber-400 lighter
+                        'rgba(253, 224, 71, 0.5)',  // yellow-400 lighter
+                    ],
+                    borderColor: [
+                        '#facc15',
+                        '#fde047',
+                        '#fef08a',
+                        '#facc15',
+                        '#fde047',
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: { display: true, text: '天數', color: '#9ca3af' },
+                        ticks: { color: '#9ca3af' },
+                        grid: { color: '#374151' }
+                    },
+                    y: {
+                        ticks: { color: '#d1d5db' },
+                        grid: { color: '#374151' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw} 天`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderEffortDistributionChart() {
+        const ctx = document.getElementById('effort-distribution-chart');
+        if (!ctx) return;
+
+        if (effortDistributionChartInstance) {
+            effortDistributionChartInstance.destroy();
+        }
+
+        const effortData = {
+            '醫學知識與AI倫理': 0,
+            '程式設計與工具學習': 0,
+            '資料處理與分析': 0,
+            'AI模型建構與優化': 0,
+            '研究產出與文獻技能': 0,
+            '計畫管理與整合學習': 0
+        };
+
+        planData.forEach(month => {
+            month.weeks.forEach(week => {
+                week.days.forEach(day => {
+                    if (day.category === "C1_MedAI_Ethics") effortData['醫學知識與AI倫理']++;
+                    else if (day.category === "C2_ProgTools") effortData['程式設計與工具學習']++;
+                    else if (day.category === "C3_DataHandling") effortData['資料處理與分析']++;
+                    else if (day.category === "C4_Modeling") effortData['AI模型建構與優化']++;
+                    else if (day.category === "C5_ResearchOutput") effortData['研究產出與文獻技能']++;
+                    else if (day.category === "C6_PlanAdmin") effortData['計畫管理與整合學習']++;
+                });
+            });
+        });
+
+        effortDistributionChartInstance = new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(effortData),
+                datasets: [{
+                    label: '學習主題投入 (任務天數)',
+                    data: Object.values(effortData),
+                    backgroundColor: [
+                        'rgba(250, 204, 21, 0.8)', // amber-400
+                        'rgba(234, 179, 8, 0.8)',  // amber-500
+                        'rgba(217, 119, 6, 0.8)',  // amber-600
+                        'rgba(253, 224, 71, 0.8)', // yellow-400
+                        'rgba(245, 158, 11, 0.8)', // amber-600
+                        'rgba(202, 138, 4, 0.8)'   // amber-700
+                    ],
+                    borderColor: '#1f2937',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#d1d5db', padding: 15, font: {size: 10} }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += context.parsed + ' 天';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    init();
+});
+</script>
+</body>
+</html>
