@@ -147,9 +147,26 @@
         }
 
         audio {
-            filter: invert(0.9) hue-rotate(180deg) contrast(0.9); /* Basic dark mode for audio player */
+            /* filter: invert(0.9) hue-rotate(180deg) contrast(0.9); Removed for direct styling */
+            background-color: #fefce8; /* bg-yellow-50, a very light yellow */
             border-radius: 0.375rem; /* rounded-md */
+            padding: 0.25rem; /* Add some padding if needed */
         }
+        /* Attempt to style audio player controls - highly browser dependent */
+        audio::-webkit-media-controls-panel {
+            background-color: #fefce8; /* bg-yellow-50 for webkit controls */
+        }
+         /* For select dropdown */
+        #week-selector {
+            background-color: #fefce8; /* bg-yellow-50 */
+            color: #374151; /* text-gray-700 for better contrast on light yellow */
+            border-color: #fde047; /* border-yellow-300 */
+        }
+        #week-selector:focus {
+            border-color: #f59e0b; /* border-yellow-500 */
+            ring-color: #f59e0b; /* ring-yellow-500 */
+        }
+
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 font-sans antialiased">
@@ -190,7 +207,7 @@
             <div id="plan-content" class="hidden" role="tabpanel" aria-labelledby="plan-tab">
                 <div class="mb-6">
                     <label for="week-selector" class="block mb-2 text-sm font-medium text-gray-300">選擇週次：</label>
-                    <select id="week-selector" class="bg-gray-700 border border-gray-600 text-gray-100 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-3">
+                    <select id="week-selector" class="text-sm rounded-lg focus:ring-yellow-500 focus:border-yellow-500 block w-full p-3">
                         </select>
                 </div>
 
@@ -2018,13 +2035,13 @@ AI輔助阿茲海默症早期偵測與預後分析
 
             tabs.forEach(tab => {
                 if (tab.id === activeTabId) {
-                    tab.button.classList.add('active', 'border-purple-500', 'text-purple-300');
-                    tab.button.classList.remove('border-transparent', 'hover:text-gray-300', 'hover:border-gray-500');
+                    tab.button.classList.add('active');
+                    // tab.button.classList.remove('border-transparent', 'hover:text-gray-300', 'hover:border-gray-500');
                     tab.button.setAttribute('aria-selected', 'true');
                     tab.content.classList.remove('hidden');
                 } else {
-                    tab.button.classList.remove('active', 'border-purple-500', 'text-purple-300');
-                    tab.button.classList.add('border-transparent', 'hover:text-gray-300', 'hover:border-gray-500');
+                    tab.button.classList.remove('active');
+                    // tab.button.classList.add('border-transparent', 'hover:text-gray-300', 'hover:border-gray-500');
                     tab.button.setAttribute('aria-selected', 'false');
                     tab.content.classList.add('hidden');
                 }
