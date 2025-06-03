@@ -1,1194 +1,2400 @@
 <!DOCTYPE html>
-<html lang="zh-TW" class="dark">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI輔助阿茲海默症早期偵測與預後分析--整合生醫資料與人工智慧的自主學習計畫</title>
+    <title>18週AI與阿茲海默症自主學習計畫</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bg-dark: #111827;
-            --bg-light: #1f2937;
-            --border-color: #374151;
-            --text-primary: #e5e7eb;
-            --text-secondary: #9ca3af;
-            --accent-yellow: #f59e0b;
-            --accent-yellow-dark: #d97706;
-        }
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
-            font-family: 'Inter', 'Helvetica Neue', 'Arial', '微軟正黑體', 'Microsoft JhengHei', sans-serif;
-        }
-        .tab-btn {
-            transition: all 0.3s ease;
-            border-bottom: 2px solid transparent;
-        }
-        .tab-btn.active {
-            color: var(--accent-yellow);
-            border-bottom-color: var(--accent-yellow);
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .accordion-header {
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        .accordion-header:hover {
-            background-color: #374151;
-        }
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease-out, padding-top 0.5s ease-out, padding-bottom 0.5s ease-out;
-        }
-        .task-checkbox:checked + label {
-            text-decoration: line-through;
-            color: var(--text-secondary);
-        }
-        .quiz-option.selected {
-            background-color: var(--accent-yellow-dark);
-            border-color: var(--accent-yellow);
-        }
-        .quiz-option.correct {
-             background-color: #166534; /* Green-800 */
-        }
-        .quiz-option.incorrect {
-            background-color: #991b1b; /* Red-800 */
-        }
-        .progress-bar-bg {
-            background-color: var(--border-color);
-        }
-        .progress-bar-fill {
-            background-color: var(--accent-yellow);
-            transition: width 0.5s ease-in-out;
-        }
+        /* Custom scrollbar for webkit browsers */
         ::-webkit-scrollbar {
             width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: var(--bg-light);
+            background: #1f2937; /* bg-gray-800 */
         }
         ::-webkit-scrollbar-thumb {
-            background: #4b5563;
+            background: #4b5563; /* bg-gray-600 */
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #6b7280;
+            background: #6b7280; /* bg-gray-500 */
         }
-        .chart-container {
-            position: relative;
+        /* Basic styling for code blocks */
+        pre {
+            background-color: #374151; /* bg-gray-700 */
+            color: #d1d5db; /* text-gray-300 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem; /* text-sm */
+            white-space: pre-wrap; /* Ensure long lines wrap */
+            word-wrap: break-word; /* Break words if necessary */
+        }
+        code.language-python .token.keyword { color: #c084fc; /* purple-400 */ }
+        code.language-python .token.string { color: #a5b4fc; /* indigo-300 */ }
+        code.language-python .token.comment { color: #9ca3af; /* gray-400 */ }
+        code.language-python .token.function { color: #60a5fa; /* blue-400 */ }
+        code.language-python .token.operator { color: #f472b6; /* pink-400 */ }
+        code.language-markdown { color: #d1d5db; }
+
+
+        /* Table styling */
+        table {
             width: 100%;
-            max-width: 400px; /* Default max-width for smaller charts */
-            margin-left: auto;
-            margin-right: auto;
-            height: 300px; /* Default height */
-            max-height: 400px;
+            border-collapse: collapse;
+            margin-top: 1em;
+            margin-bottom: 1em;
         }
-        /* Specific styling for larger chart containers in Chart Analysis tab */
-        #chart-analysis .chart-container {
-            max-width: 500px; /* Slightly larger for main analysis charts */
-            height: 320px; /* Slightly taller */
+        th, td {
+            border: 1px solid #4b5563; /* border-gray-600 */
+            padding: 0.75rem;
+            text-align: left;
+        }
+        th {
+            background-color: #374151; /* bg-gray-700 */
+        }
+        /* Heading styles */
+        body h1.main-page-title { /* Specific class for the main page title */
+            font-size: 2.25rem; /* text-3xl */
+            line-height: 2.5rem;
+            font-weight: bold; 
+            color: #a78bfa; /* purple-400 */
+            margin-bottom: 2rem; /* mb-8 */
         }
 
-        @media (min-width: 768px) {
-            .chart-container { /* General adjustment for medium screens */
-                height: 350px;
-            }
-            #chart-analysis .chart-container { /* Specific for chart analysis on medium screens */
-                 height: 350px;
-            }
+        #week-content-container h1 { /* Week titles within the plan tab */
+            font-size: 1.875rem; /* text-2xl */
+            line-height: 2.25rem;
+            font-weight: 600; /* semibold */
+            color: #c4b5fd; /* purple-300 */
+            margin-bottom: 1rem; /* mb-4 */
         }
+        
+        /* Section titles within week content (e.g., "實作素材包", "學習目標") */
+        #week-content-container h3, #week-content-container h4, #week-content-container h5 { 
+            font-size: 1.5rem; /* text-xl */
+            line-height: 2rem;
+            font-weight: 600; /* semibold */
+            color: #ddd6fe; /* purple-200 */
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+         /* Sub-section titles within week content (e.g., "步驟教學") */
+        #week-content-container h4 {
+             font-size: 1.25rem; /* text-lg */
+             line-height: 1.75rem;
+             color: #e0e7ff; /* indigo-100 */
+        }
+
+
+        /* Homepage content titles */
+        #home-content h2 { /* For "自主學習計畫語音摘要" and "自主學習計畫簡介" */
+            font-size: 1.5rem; /* text-xl */
+            line-height: 2rem;
+            font-weight: 600; /* semibold */
+            color: #c4b5fd; /* purple-300 */
+            margin-top:1.5em; 
+            margin-bottom:0.75em; /* mb-3 */
+        }
+        #home-content #plan-summary h3 { /* For subheadings within the plan summary */
+            font-size: 1.25rem; /* text-lg */
+            line-height: 1.75rem;
+            font-weight: 600; /* semibold */
+            color: #ddd6fe; /* purple-200 */
+            margin-top: 1rem; /* mt-4 */
+            margin-bottom: 0.5rem; /* mb-2 */
+        }
+        
+        /* Chart title */
+        #chart-content h2 {
+            font-size: 1.875rem; /* text-2xl */
+            line-height: 2.25rem;
+            font-weight: 600; /* semibold */
+            color: #c4b5fd; /* purple-300 */
+            margin-bottom: 1.5rem; /* mb-6 */
+        }
+
+
+        ul { list-style-type: disc; margin-left: 1.5rem; padding-left: 0.5rem; }
+        ol { list-style-type: decimal; margin-left: 1.5rem; padding-left: 0.5rem; }
+        li { margin-bottom: 0.25rem; }
+        p { margin-bottom: 0.75rem; line-height: 1.6; }
+        strong { font-weight: bold; color: #f9a8d4; /* pink-300 */}
+        blockquote {
+            border-left: 4px solid #6b7280; /* border-gray-500 */
+            padding-left: 1rem;
+            margin-left: 0;
+            margin-right: 0;
+            font-style: italic;
+            color: #d1d5db; /* text-gray-300 */
+        }
+        a {
+            color: #a78bfa; /* purple-400 */
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+            color: #c4b5fd; /* purple-300 */
+        }
+
+
+        /* Tab styling */
+        .tab-button.active {
+            border-color: #8b5cf6; /* border-purple-500 */
+            color: #c4b5fd; /* text-purple-300 */
+        }
+         .tab-button {
+            border-bottom-width: 2px; /* Default border width for tabs */
+         }
         audio {
-            filter: invert(1) sepia(0.5) saturate(5) hue-rotate(10deg); /* Basic yellow-ish tint for dark mode */
+            filter: invert(0.9) hue-rotate(180deg) contrast(0.9); /* Basic dark mode for audio player */
+            border-radius: 0.375rem; /* rounded-md */
         }
     </style>
 </head>
-<body class="antialiased">
-
-    <div class="container mx-auto p-4 md:p-8">
-        <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-yellow-400">AI輔助阿茲海默症早期偵測與預後分析
-            <p>整合生醫資料與人工智慧</p></h1>
-            <p class="text-3xl md:text-x3 text-yellow-100 mt-3">王可恩的自主學習計畫</p>
+<body class="bg-gray-900 text-gray-200 font-sans antialiased">
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-4xl">
+        <header class="text-center">
+            <h1 class="main-page-title">18週AI與阿茲海默症自主學習計畫</h1>
         </header>
 
-        <nav class="mb-8 border-b border-gray-700">
-            <ul class="flex flex-wrap -mb-px justify-center text-sm font-medium text-center text-gray-400">
-                <li class="mr-2"><button data-tab="home" class="tab-btn inline-block p-4 rounded-t-lg active">首頁</button></li>
-                <li class="mr-2"><button data-tab="plan" class="tab-btn inline-block p-4 rounded-t-lg">學習內容規畫</button></li>
-                <li class="mr-2"><button data-tab="assessment" class="tab-btn inline-block p-4 rounded-t-lg">學習評量</button></li>
-                <li class="mr-2"><button data-tab="chart-analysis" class="tab-btn inline-block p-4 rounded-t-lg">圖表分析</button></li>
-                <li class="mr-2"><button data-tab="content" class="tab-btn inline-block p-4 rounded-t-lg">學習內容</button></li>
-                <li class="mr-2"><button data-tab="reflection" class="tab-btn inline-block p-4 rounded-t-lg">心得反思</button></li>
-                <li><button data-tab="references" class="tab-btn inline-block p-4 rounded-t-lg">參考資料</button></li>
+        <div class="mb-4 border-b border-gray-700">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="mainTab" role="tablist">
+                <li class="mr-2" role="presentation">
+                    <button class="tab-button inline-block p-4 border-transparent rounded-t-lg hover:text-gray-300 hover:border-gray-500 active" id="home-tab" type="button" role="tab" aria-controls="home-content" aria-selected="true">首頁</button>
+                </li>
+                <li class="mr-2" role="presentation">
+                    <button class="tab-button inline-block p-4 border-transparent rounded-t-lg hover:text-gray-300 hover:border-gray-500" id="plan-tab" type="button" role="tab" aria-controls="plan-content" aria-selected="false">學習計畫</button>
+                </li>
+                <li class="mr-2" role="presentation">
+                    <button class="tab-button inline-block p-4 border-transparent rounded-t-lg hover:text-gray-300 hover:border-gray-500" id="chart-tab" type="button" role="tab" aria-controls="chart-content" aria-selected="false">圖表分析</button>
+                </li>
             </ul>
-        </nav>
+        </div>
 
-        <main>
-            <section id="home" class="tab-content active space-y-6 leading-relaxed">
-                <div class="w-full flex justify-center mb-6">
-                    <audio controls class="w-[80%] rounded-lg shadow-lg">
-                        <source src="自主學習計畫語音摘要.mp3" type="audio/mpeg">
-                        您的瀏覽器不支援音訊播放。
-                    </audio>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-lg">
-                    <h2 class="text-2xl font-bold text-yellow-400 mb-4">研究主題緣起與動機</h2>
-                    <p class="text-gray-300">隨著全球人口高齡化趨勢日益顯著，阿茲海默症 (Alzheimer's Disease, AD) 已成為影響數千萬家庭的重大健康挑戰...本自主學習計畫選擇「AI輔助阿茲海默症早期偵測與預後分析」作為主題，正是源於對解決此重大健康問題的熱忱，以及對AI技術革新力量的深刻認同。此研究方向不僅具有高度的科學前瞻性與社會意義，亦與台灣大學醫學系追求卓越創新、致力於改善人類健康的宗旨高度契合。期望透過本計畫的系統性學習，能為未來投身醫學研究與臨床實踐奠定堅實的跨領域知識基礎。</p>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-lg">
-                    <h2 class="text-2xl font-bold text-yellow-400 mb-4">期望達成之學習目標</h2>
-                    <ul class="list-disc list-inside space-y-2 text-gray-300">
-                        <li><b>深入理解阿茲海默症:</b> 全面掌握其病理生理學機制、臨床分期、現行診斷方法與局限性。</li>
-                        <li><b>掌握AI/ML於醫學應用之基礎:</b> 理解AI、機器學習及深度學習的核心概念與專案流程。</li>
-                        <li><b>學習以AI整合與分析生醫數據之技能:</b> 認識相關生醫數據類型，並探索AI的整合分析方法。</li>
-                        <li><b>探索AI驅動之AD早期偵測與預後方法:</b> 研究特定AI模型在AD早期偵測與預後預測上的應用案例。</li>
-                        <li><b>培養基礎實作能力:</b> 建立Python程式語言基礎，學習使用Pandas、NumPy等函式庫。</li>
-                        <li><b>建立倫理意識:</b> 理解AI技術於醫學應用的倫理挑戰，如數據隱私、演算法偏見與模型可解釋性。</li>
-                    </ul>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-lg">
-                    <h2 class="text-2xl font-bold text-yellow-400 mb-4">完成研究後之預期收穫</h2>
-                    <p class="text-gray-300">完成此計畫後，預期能獲得紮實的跨領域知識基礎、提升的分析與批判性思維能力、開闊的跨學科視野、初步的研究素養、增強的問題解決能力、精進的溝通表達能力，並進一步堅定個人從醫的志向與熱忱。最終的計畫成果本身，也將是一份展現個人學習主動性、組織規劃能力與研究潛力的有力證明。</p>
-                </div>
-            </section>
-
-            <section id="plan" class="tab-content space-y-4">
-                 <div class="bg-gray-800 p-6 rounded-lg text-center">
-                    <h2 class="text-2xl font-bold text-yellow-400 mb-4">進度報告</h2>
-                    <div id="overall-progress-container" class="mb-4">
-                        <p class="text-lg mb-2">總體完成度: <span id="overall-progress-text" class="font-bold">0%</span></p>
-                        <div class="w-full progress-bar-bg rounded-full h-4">
-                            <div id="overall-progress-bar" class="progress-bar-fill h-4 rounded-full" style="width: 0%"></div>
-                        </div>
+        <div id="mainTabContent">
+            <div id="home-content" role="tabpanel" aria-labelledby="home-tab">
+                <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl">
+                    <div class="mb-8">
+                        <h2>自主學習計畫語音摘要</h2>
+                        <audio controls class="w-full mt-2">
+                            <source src="自主學習計畫語音摘要.mp3" type="audio/mpeg">
+                            您的瀏覽器不支援音訊播放。請確認檔案 "自主學習計畫語音摘要.mp3" 已放置於正確路徑，或您的瀏覽器支援MP3格式。
+                        </audio>
                     </div>
-                    <button id="report-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                        查看/匯出進度報告
-                    </button>
-                </div>
-                <div id="plan-container" class="space-y-4"></div>
-            </section>
-
-            <section id="assessment" class="tab-content space-y-6">
-                <div class="bg-gray-800 p-6 rounded-lg">
-                    <h2 class="text-2xl font-bold text-yellow-400 mb-4">每月學習成果測驗</h2>
-                    <p class="mb-4 text-gray-300">請選擇要進行的測驗。每次測驗包含10道單項選擇題，旨在檢驗您對該月核心概念的掌握程度。完成後將顯示結果分析。</p>
-                    <div class="flex flex-col sm:flex-row gap-4 items-center">
-                        <select id="quiz-selector" class="w-full sm:w-auto bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-yellow-500 focus:border-yellow-500 block p-2.5">
-                            <option value="0">第一階段 (九月) 測驗</option>
-                            <option value="1">第二階段 (十月) 測驗</option>
-                            <option value="2">第三階段 (十一月) 測驗</option>
-                            <option value="3">第四階段 (十二月) 測驗</option>
-                        </select>
-                         <button id="view-results-btn" class="w-full sm:w-auto bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition-colors">查看歷史結果</button>
-                    </div>
-                </div>
-
-                <div id="quiz-container" class="bg-gray-800 p-6 rounded-lg"></div>
-                
-                <div id="quiz-result-container" class="hidden bg-gray-800 p-6 rounded-lg space-y-4">
-                    <h3 class="text-xl font-bold text-yellow-400">評量結果分析</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                        <div>
-                             <p class="text-lg">您的得分: <span id="quiz-score" class="font-bold"></span></p>
-                            <div id="quiz-analysis" class="mt-4 text-gray-300 leading-relaxed"></div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="quiz-chart"></canvas>
-                        </div>
-                    </div>
-                    <button id="retake-quiz-btn" class="mt-4 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">重新測驗</button>
-                </div>
-            </section>
-
-            <section id="chart-analysis" class="tab-content space-y-6">
-                <div class="bg-gray-800 p-6 rounded-lg">
-                    <h2 class="text-2xl font-bold text-yellow-400 mb-4">學習進度與成果圖表分析</h2>
-                    <p class="text-gray-300 mb-6">此區域將展示學習進度、測驗結果等多維度的圖表分析，幫助您更直觀地了解學習成效與趨勢。</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="bg-gray-900/50 p-4 rounded-lg shadow-lg">
-                            <h3 class="text-xl font-semibold text-yellow-500 mb-3 text-center">整體進度趨勢</h3>
-                            <div class="chart-container">
-                                <canvas id="progress-trend-chart"></canvas>
+                    <div>
+                        <h2>自主學習計畫簡介</h2>
+                        <div id="plan-summary" class="space-y-3 text-gray-300 leading-relaxed">
                             </div>
-                            <p class="text-sm text-gray-400 mt-3 text-center">（圖表顯示：隨時間變化的總體任務完成率）</p>
-                        </div>
-                        <div class="bg-gray-900/50 p-4 rounded-lg shadow-lg">
-                            <h3 class="text-xl font-semibold text-yellow-500 mb-3 text-center">各階段測驗平均得分</h3>
-                            <div class="chart-container">
-                                <canvas id="quiz-average-chart"></canvas>
-                            </div>
-                            <p class="text-sm text-gray-400 mt-3 text-center">（圖表顯示：比較各學習階段的測驗平均分數）</p>
-                        </div>
                     </div>
                 </div>
-            </section>
-
-            <section id="content" class="tab-content">
-                <div class="bg-gray-800 p-6 rounded-lg">
-                    <div class="mb-4">
-                         <input type="text" id="table-search" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-white" placeholder="搜尋每日學習任務...">
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-400">
-                            <thead class="text-xs text-gray-300 uppercase bg-gray-700">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3">日期</th>
-                                    <th scope="col" class="px-6 py-3">學習階段</th>
-                                    <th scope="col" class="px-6 py-3">每日任務</th>
-                                    <th scope="col" class="px-6 py-3">進度</th>
-                                </tr>
-                            </thead>
-                            <tbody id="content-table-body">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <section id="reflection" class="tab-content">
-                <div class="bg-gray-800 p-6 rounded-lg space-y-4 text-gray-300 leading-loose">
-                    <h2 class="text-2xl font-bold text-yellow-400 mb-4">計畫完成後研究心得與學習反思</h2>
-                    <h3 class="text-xl font-semibold text-gray-100 pt-2">引言</h3>
-                    <p>在懷抱著對醫學領域的無限憧憬及對人工智慧技術改變未來醫療潛能的濃厚興趣下，本人規劃並完成了這為期四個半月的「AI輔助阿茲海默症早期偵測與預後分析、整合生醫資料與人工智慧的自主學習研究」計畫。最初，期望能藉此計畫深入了解阿茲海默症這一複雜的腦部退化性疾病，並探索尖端AI技術如何為其早期診斷與預後評估帶來曙光。如今，回首這段充實的學習旅程，不僅知識層面獲得了極大拓展，更在思維方式與研究能力上得到了寶貴的鍛鍊。</p>
-                    <h3 class="text-xl font-semibold text-gray-100 pt-2">知識與技能的收穫</h3>
-                    <p>透過本計畫的系統性學習，本人在阿茲海默症的醫學知識方面，深刻理解了β-澱粉樣蛋白 (Aβ) 沉積與Tau蛋白過度磷酸化在疾病病理機制中的核心角色，並掌握了從輕度認知障礙 (MCI) 到不同分期阿茲海默症的臨床特徵與診斷標準。對於腦影像學 (MRI, PET)、腦脊髓液與血液生物標記等診斷工具的原理與應用，亦建立了清晰的認識。在人工智慧領域，本人從零開始，逐步掌握了機器學習與深度學習的基本概念，特別是對卷積神經網路 (CNN) 在醫學影像分析中的巨大潛力有了直觀的體會，並初步了解了長短期記憶網路 (LSTM) 在處理序列數據上的應用前景。更重要的是，學習了Python程式語言的基礎，並透過NumPy、Pandas等函式庫，初步具備了進行基本生醫數據處理與分析的能力。此外，本計畫也讓我系統性地學習了AI模型效能的評估指標，如準確率、敏感性、ROC曲線等，這對於未來批判性閱讀和評估相關研究至關重要。</p>
-                    <h3 class="text-xl font-semibold text-gray-100 pt-2">學習過程中的挑戰與克服</h3>
-                    <p>這段自主學習旅程並非一帆風順。初期，面對阿茲海默症複雜的分子病理機制和眾多陌生的醫學術語，確實感到有些吃力。本人採取的方法是將複雜概念拆解為更小的知識點，逐個擊破，並輔以觀看相關的科普影片和動畫，將抽象的文字描述轉化為更易理解的視覺圖像。進入AI與程式設計的學習階段，挑戰則更為具體。作為一名高中生，缺乏系統性的電腦科學背景，常因微小的語法錯誤而卡關。克服這些困難的關鍵在於耐心與堅持。本人利用了大量線上免費教學資源，遇到程式錯誤時，學會了仔細閱讀錯誤提示，並利用網路搜尋尋找解決方案，這個過程本身也是一種寶貴的學習。</p>
-                    <h3 class="text-xl font-semibold text-gray-100 pt-2">最具啟發性或影響力的學習點</h3>
-                    <p>在整個學習過程中，有幾點令我印象至為深刻且深受啟發。首先，是台灣本土研究團隊在AI輔助失智症診斷與照護領域的積極探索和卓越貢獻。其次，是對AI倫理議題的深入探討。最初，我更多地關注AI技術的強大功能，但在學習過程中，逐漸意識到數據隱私、演算法偏見、模型可解釋性以及醫療公平性等倫理問題，對於AI在醫學領域的健康發展至關重要。這引發了我對醫學人文精神的深思——技術的進步必須始終以人為本，以患者的福祉為最高依歸。最後，ADNI等大型公開數據庫的共享精神也令我感佩，讓我體會到科學研究的協作本質。</p>
-                    <h3 class="text-xl font-semibold text-gray-100 pt-2">對未來醫學之路的影響與展望</h3>
-                    <p>完成此次自主學習計畫，不僅極大豐富了我的知識儲備，更深刻地影響了我對未來醫學之路的規劃與展望。我更加確信，結合尖端科技與臨床醫學是未來醫療發展的必然趨勢。AI技術在阿茲海默症等複雜疾病方面所展現的潛力，讓我對攻克這些醫學難題充滿了期待。若有幸進入台灣大學醫學系深造，我期望能繼續深化在此領域的學習，積極參與醫學院內與AI醫療相關的研究項目或課程。長遠而言，我希望能成為一名既懂醫學又懂AI的跨領域人才，為提升台灣乃至全球的失智症防治水平貢獻一己之力。</p>
-                </div>
-            </section>
-
-            <section id="references" class="tab-content">
-                 <div class="bg-gray-800 p-6 rounded-lg">
-                    <h2 class="text-2xl font-bold text-yellow-400 mb-4">參考資料</h2>
-                    <p class="mb-6 text-gray-400">本計畫參考了眾多學術論文、機構報告、線上課程及新聞資訊。以下為主要參考資料列表，點擊連結可前往相關資源。</p>
-                    <div id="references-container" class="space-y-4"></div>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <div id="report-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden">
-        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-yellow-400">進度報告總覽</h3>
-                <button id="close-modal-btn" class="text-gray-400 hover:text-white">&times;</button>
             </div>
-            <div id="report-content" class="space-y-6">
-                 <div class="text-center">
-                    <p class="text-lg">總體進度</p>
-                    <p id="report-overall-progress" class="text-3xl font-bold text-white">0%</p>
+
+            <div id="plan-content" class="hidden" role="tabpanel" aria-labelledby="plan-tab">
+                <div class="mb-6">
+                    <label for="week-selector" class="block mb-2 text-sm font-medium text-gray-300">選擇週次：</label>
+                    <select id="week-selector" class="bg-gray-700 border border-gray-600 text-gray-100 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-3">
+                        </select>
                 </div>
-                <div class="chart-container h-64 md:h-80 mx-auto">
-                    <canvas id="report-chart"></canvas>
+
+                <div id="week-content-container" class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl min-h-[300px]">
+                    <div id="week-title"></div> <div id="week-details">
+                        </div>
+                    <div id="progress-tracker-container" class="mt-8 pt-6 border-t border-gray-700">
+                        </div>
                 </div>
-                <div>
-                    <h4 class="font-bold text-lg mb-2 text-gray-200">各階段完成度</h4>
-                    <div id="report-details" class="space-y-3"></div>
-                </div>
-                 <div class="text-center mt-6">
-                    <button id="export-report-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">匯出成文字檔 (.txt)</button>
+            </div>
+
+            <div id="chart-content" class="hidden" role="tabpanel" aria-labelledby="chart-tab">
+                <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl min-h-[400px] flex flex-col items-center justify-center">
+                     <h2>學習進度分析</h2>
+                     <div class="w-full max-w-md h-80 sm:h-96">
+                        <canvas id="progressChart"></canvas>
+                     </div>
+                     <p id="chart-loading-message" class="text-gray-400 mt-4 hidden">圖表載入中...</p>
+                     <p id="chart-error-message" class="text-red-400 mt-4 hidden">無法載入圖表資料。</p>
                 </div>
             </div>
         </div>
+        
+        <footer class="text-center mt-12 text-sm text-gray-500">
+            <p>學習進度將儲存於您的帳戶中。</p>
+            <p id="user-id-display" class="mt-1"></p>
+        </footer>
     </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
+    <div id="loading-indicator" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="text-white text-xl">載入中...</div>
+    </div>
 
-    const planData = [
-        {
-            phase: "階段 1: (2025年9月) - 奠定基礎：阿茲海默症與醫學概論",
-            goal: "建立對阿茲海默症的全面性理解，包括其病理生理學、臨床表現、現行診斷方法及相關生物醫學數據的種類與意義。",
-            weeks: [
-                {
-                    week: "Week 1 (9/1 - 9/7)",
-                    goal: "掌握阿茲海默症的定義、核心病理特徵 (Aβ斑塊、Tau蛋白纏結)、相關風險基因 (如APOE4)，以及其在全球與台灣的流行狀況。",
-                    tasks: [
-                        { date: "2025-09-01", desc: "研讀阿茲海默症的定義、發現歷史。初步了解全球失智症與阿茲海默症的流行病學數據，特別關注老年人口的發病率。"},
-                        { date: "2025-09-02", desc: "深入研究台灣地區阿茲海默症的流行病學現況與社會負擔。"},
-                        { date: "2025-09-03", desc: "學習阿茲海默症的核心病理特徵之一：β-澱粉樣蛋白 (Aβ) 斑塊的形成機制。"},
-                        { date: "2025-09-04", desc: "學習阿茲海默症的另一核心病理特徵：Tau 蛋白與神經纖維纏結的形成機制。"},
-                        { date: "2025-09-05", desc: "探討神經炎症、氧化壓力及其他腦部病理變化在阿茲海默症發展過程中的角色。"},
-                        { date: "2025-09-06", desc: "學習阿茲海默症的遺傳學基礎，重點了解載脂蛋白E (APOE) 基因，特別是APOE ε4 等位基因，如何增加AD的罹患風險。"},
-                        { date: "2025-09-07", desc: "複習本週所學關於AD病理學與流行病學的知識，整理筆記，並提出至少一個相關的疑問。"}
-                    ]
-                },
-                {
-                    week: "Week 2 (9/8 - 9/14)",
-                    goal: "掌握輕度認知障礙 (MCI) 的概念，以及阿茲海默症從早期、中期至晚期的臨床特徵與行為精神症狀 (BPSD)。",
-                    tasks: [
-                        { date: "2025-09-08", desc: "學習輕度認知障礙 (MCI) 的定義、主要臨床表現 (尤其是遺忘型MCI) 和診斷標準。"},
-                        { date: "2025-09-09", desc: "探討MCI與阿茲海默症之間的關係，了解MCI患者轉化為AD的風險及影響因素。"},
-                        { date: "2025-09-10", desc: "研讀阿茲海默症的早期臨床症狀，包括記憶力衰退、語言表達困難等。"},
-                        { date: "2025-09-11", desc: "學習阿茲海默症的中期臨床症狀，包括更嚴重的記憶喪失、判斷力下降等。"},
-                        { date: "2025-09-12", desc: "了解阿茲海默症的晚期臨床症狀，包括嚴重認知功能障礙、需完全依賴他人照護等。"},
-                        { date: "2025-09-13", desc: "學習失智症常見的行為和心理症狀 (BPSD)。"},
-                        { date: "2025-09-14", desc: "複習本週所學關於MCI及AD各分期症狀的知識，整理一份AD病程進展的摘要。"}
-                    ]
-                },
-                {
-                    week: "Week 3 (9/15 - 9/21)",
-                    goal: "掌握MRI與PET兩種主要腦影像技術的基本原理及其在阿茲海默症診斷中的應用，了解其各自的優勢與局限。",
-                    tasks: [
-                        { date: "2025-09-15", desc: "學習磁振造影 (MRI) 的基本物理原理。"},
-                        { date: "2025-09-16", desc: "了解結構性MRI (sMRI) 在腦部形態學評估中的應用，特別是觀察腦萎縮模式。"},
-                        { date: "2025-09-17", desc: "學習其他MRI序列 (如FLAIR) 在偵測腦白質病變等方面的應用。"},
-                        { date: "2025-09-18", desc: "學習正子斷層掃描 (PET) 的基本原理。"},
-                        { date: "2025-09-19", desc: "了解FDG-PET 如何反映腦部葡萄糖代謝活性及其在AD中的典型表現。"},
-                        { date: "2025-09-20", desc: "學習澱粉樣蛋白PET與Tau蛋白PET的原理與應用。"},
-                        { date: "2025-09-21", desc: "比較MRI與PET在AD診斷中的各自優勢、局限性以及資訊的互補性。"}
-                    ]
-                },
-                {
-                    week: "Week 4 (9/22 - 9/28)",
-                    goal: "了解腦脊髓液、血液等生物標記在AD診斷中的應用，熟悉現行AD的臨床診斷流程與常用評估工具。",
-                    tasks: [
-                        { date: "2025-09-22", desc: "學習腦脊髓液 (CSF) 中的核心生物標記：Aβ42、總Tau蛋白和磷酸化Tau蛋白。"},
-                        { date: "2025-09-23", desc: "探討血液生物標記在AD早期篩檢與診斷中的最新研究進展與潛力。"},
-                        { date: "2025-09-24", desc: "熟悉現行阿茲海默症的臨床診斷流程，包括病史詢問、神經學檢查。"},
-                        { date: "2025-09-25", desc: "學習常用的認知功能評估量表，如MMSE、MoCA。"},
-                        { date: "2025-09-26", desc: "學習臨床失智評估量表 (CDR) 及台灣本土發展的簡易失智18分檢測表 (SD18)。"},
-                        { date: "2025-09-27", desc: "總結目前AD早期診斷面臨的主要挑戰與未被滿足的臨床需求。"},
-                        { date: "2025-09-28", desc: "初步了解台灣失智症照護的相關資源與政策方向。"}
-                    ]
-                }
-            ]
-        },
-        {
-            phase: "階段 2: (2025年10月) - AI與機器學習入門",
-            goal: "掌握人工智慧、機器學習、深度學習的基本概念、主要演算法類型，並初步學習Python程式語言及其在數據分析中的應用，同時了解AI在醫療領域的倫理考量。",
-            weeks: [
-                {
-                    week: "Week 5 (9/29 - 10/5)",
-                    goal: "理解AI、機器學習的定義、主要分支、不同學習方式及其在解決問題上的基本流程。",
-                    tasks: [
-                        { date: "2025-09-29", desc: "學習人工智慧 (AI) 的廣泛定義、發展簡史及主要研究領域。"},
-                        { date: "2025-09-30", desc: "深入理解機器學習 (ML) 的定義，及其與傳統程式設計的區別。"},
-                        { date: "2025-10-01", desc: "學習監督式學習 (Supervised Learning) 的概念、原理及典型任務 (分類、回歸)。"},
-                        { date: "2025-10-02", desc: "學習非監督式學習 (Unsupervised Learning) の概念、原理及典型任務 (聚類、降維)。"},
-                        { date: "2025-10-03", desc: "初步了解強化學習 (Reinforcement Learning) 的基本概念。"},
-                        { date: "2025-10-04", desc: "掌握機器學習專案的典型流程。"},
-                        { date: "2025-10-05", desc: "複習本週所學，思考AD早期偵測屬於何種ML任務。"}
-                    ]
-                },
-                {
-                    week: "Week 6 (10/6 - 10/12)",
-                    goal: "完成Python開發環境的建置，並掌握Python的基本語法。",
-                    tasks: [
-                         { date: "2025-10-06", desc: "安裝Anaconda，熟悉Jupyter Notebook或Google Colab。"},
-                         { date: "2025-10-07", desc: "學習Python的基本數據類型(int, float, str, bool)與變數。"},
-                         { date: "2025-10-08", desc: "學習Python的常用運算符 (算術、比較、邏輯)。"},
-                         { date: "2025-10-09", desc: "學習Python的條件判斷語句 (if, elif, else)。"},
-                         { date: "2025-10-10", desc: "學習Python的迴圈結構 (for, while)。"},
-                         { date: "2025-10-11", desc: "學習Python中函數的定義 (def) 與調用。"},
-                         { date: "2025-10-12", desc: "學習如何導入Python模組並使用。"}
-                    ]
-                },
-                 {
-                    week: "Week 7 (10/13 - 10/19)",
-                    goal: "初步掌握NumPy、Pandas及Matplotlib/Seaborn等Python核心數據分析函式庫的基本操作。",
-                    tasks: [
-                        { date: "2025-10-13", desc: "NumPy函式庫入門：學習創建ndarray。"},
-                        { date: "2025-10-14", desc: "NumPy陣列的索引與切片操作。"},
-                        { date: "2025-10-15", desc: "NumPy陣列的數學運算。"},
-                        { date: "2025-10-16", desc: "Pandas函式庫入門：學習Series和DataFrame。"},
-                        { date: "2025-10-17", desc: "Pandas DataFrame的數據讀取與選擇。"},
-                        { date: "2025-10-18", desc: "Matplotlib函式庫入門：繪製基本圖表。"},
-                        { date: "2025-10-19", desc: "Seaborn函式庫入門：繪製統計圖表。"}
-                    ]
-                },
-                 {
-                    week: "Week 8 (10/20 - 10/26)",
-                    goal: "廣泛了解AI在醫療健康各領域的實際應用案例，並深入探討AI醫療所面臨的關鍵倫理挑戰與規範。",
-                    tasks: [
-                        { date: "2025-10-20", desc: "探索AI在醫學影像診斷中的應用案例。"},
-                        { date: "2025-10-21", desc: "了解AI在疾病預測、個人化治療、藥物研發方面的應用。"},
-                        { date: "2025-10-22", desc: "探討AI醫療的倫理挑戰之一：數據隱私與安全。"},
-                        { date: "2025-10-23", desc: "探討AI醫療的倫理挑戰之二：演算法偏見與公平性。"},
-                        { date: "2025-10-24", desc: "探討AI醫療的倫理挑戰之三：透明度、可解釋性與責任歸屬。"},
-                        { date: "2025-10-25", desc: "學習WHO等國際機構提出的AI醫療倫理與治理原則。"},
-                        { date: "2025-10-26", desc: "思考未來醫學生應如何培養AI倫理素養。"}
-                    ]
-                }
-            ]
-        },
-        {
-            phase: "階段 3: (2025年11月) - AI於阿茲海默症之應用：早期偵測",
-            goal: "深入探討AI，特別是深度學習 (如CNN)，如何應用於分析腦影像 (MRI, PET) 和其他生物標記以實現阿茲海默症的早期偵測。",
-            weeks: [
-                {
-                    week: "Week 9 (10/27 - 11/2)",
-                    goal: "掌握深度學習的基本原理，並深入理解卷積神經網路 (CNN) 的核心組成與其在圖像識別中的應用。",
-                    tasks: [
-                         { date: "2025-10-27", desc: "學習深度學習 (DL) 的基本概念，認識類神經網路。"},
-                         { date: "2025-10-28", desc: "學習單個神經元 (感知器) 的數學模型。"},
-                         { date: "2025-10-29", desc: "學習多層感知器 (MLP) 的結構。"},
-                         { date: "2025-10-30", desc: "了解類神經網路的訓練過程：損失函數、梯度下降、反向傳播。"},
-                         { date: "2025-10-31", desc: "學習卷積神經網路 (CNN) 的核心組件之一：卷積層。"},
-                         { date: "2025-11-01", desc: "學習CNN的核心組件之二：池化層和全連接層。"},
-                         { date: "2025-11-02", desc: "觀看並分析一個完整的CNN圖像識別應用範例。"}
-                    ]
-                },
-                {
-                    week: "Week 10 (11/3 - 11/9)",
-                    goal: "探討CNN等AI模型如何應用於分析MRI和PET腦影像，以偵測與阿茲海默症相關的結構與功能性變化。",
-                    tasks: [
-                        { date: "2025-11-03", desc: "研究AI/CNN模型如何應用於sMRI影像，自動偵測腦結構變化。"},
-                        { date: "2025-11-04", desc: "探討AI/CNN模型如何分析皮質厚度等更細微的sMRI特徵。"},
-                        { date: "2025-11-05", desc: "研究AI/CNN模型如何應用於FDG-PET影像，識別腦代謝低下模式。"},
-                        { date: "2025-11-06", desc: "探討AI/CNN在Amyloid-PET和Tau-PET影像分析中的應用。"},
-                        { date: "2025-11-07", desc: "學習醫學影像數據常見的預處理步驟。"},
-                        { date: "2025-11-08", desc: "探討數據增強 (data augmentation) 技術在醫學影像AI中的應用。"},
-                        { date: "2025-11-09", desc: "複習本週所學，思考將CNN應用於不同模態腦影像時的調整。"}
-                    ]
-                },
-                {
-                    week: "Week 11 (11/10 - 11/16)",
-                    goal: "了解AI/機器學習如何分析腦脊髓液 (CSF)、血液及基因等非影像生物標記。",
-                    tasks: [
-                        { date: "2025-11-10", desc: "研究AI/ML模型如何分析CSF中的核心生物標記數據。"},
-                        { date: "2025-11-11", desc: "探討AI/ML在CSF生物標記組合分析中的應用。"},
-                        { date: "2025-11-12", desc: "學習AI/ML在分析血液生物標記以進行AD早期篩檢的最新研究。"},
-                        { date: "2025-11-13", desc: "比較基於CSF的AI模型與基於血液的AI模型的優缺點。"},
-                        { date: "2025-11-14", desc: "探討AI/ML如何整合基因數據 (如APOE4) 進行更精準的AD風險預測。"},
-                        { date: "2025-11-15", desc: "了解AI在多基因風險評分 (PRS) 中的應用潛力。"},
-                        { date: "2025-11-16", desc: "複習本週內容，思考多模態AI模型的優勢。"}
-                    ]
-                },
-                {
-                    week: "Week 12 (11/17 - 11/23)",
-                    goal: "透過分析具體研究案例，深入理解AI模型在AD早期偵測中的實際應用，並掌握評估AI模型效能的關鍵指標。",
-                    tasks: [
-                        { date: "2025-11-17", desc: "選擇一篇代表性AI輔助AD早期偵測的學術論文，閱讀其研究背景與目的。"},
-                        { date: "2025-11-18", desc: "分析所選論文中使用的数据集。"},
-                        { date: "2025-11-19", desc: "分析所選論文中AI模型的方法學。"},
-                        { date: "2025-11-20", desc: "分析所選論文報告的研究結果與模型效能。"},
-                        { date: "2025-11-21", desc: "學習AI模型效能評估的常用指標 (Accuracy, Precision, Recall, Specificity, F1)。"},
-                        { date: "2025-11-22", desc: "學習ROC曲線與AUC值的概念。"},
-                        { date: "2025-11-23", desc: "探討公開數據庫如ADNI對AI在AD研究中的貢獻。"}
-                    ]
-                },
-            ]
-        },
-        {
-            phase: "階段 4: (2025年12月) - AI於阿茲海默症之應用：預後分析與生醫資料整合",
-            goal: "探索AI在阿茲海默症預後分析中的應用，特別是如何整合多種生物醫學數據進行預測，並初步了解用於序列數據分析的AI模型及模型可解釋性。",
-            weeks: [
-                {
-                    week: "Week 13 (11/24 - 11/30)",
-                    goal: "了解AI/機器學習如何被用於預測MCI向AD的轉化、AD患者認知功能的下降速度以及對潛在治療的反應。",
-                    tasks: [
-                        { date: "2025-11-24", desc: "研究AI/ML模型在預測MCI患者未來是否會轉化為AD的應用。"},
-                        { date: "2025-11-25", desc: "探討用於MCI轉化預測的AI模型類型。"},
-                        { date: "2025-11-26", desc: "學習AI/ML模型如何預測已確診AD患者的認知功能下降速度。"},
-                        { date: "2025-11-27", desc: "了解縱向數據 (longitudinal data) 在AD預後模型中的重要性。"},
-                        { date: "2025-11-28", desc: "探討AI在預測AD患者對特定治療藥物反應的潛力。"},
-                        { date: "2025-11-29", desc: "了解AI在輔助制定個人化AD治療或照護計畫中的潛在角色。"},
-                        { date: "2025-11-30", desc: "複習本週內容，總結AI在AD預後分析中的主要應用方向與挑戰。"}
-                    ]
-                },
-                {
-                    week: "Week 14 (12/1 - 12/7)",
-                    goal: "理解整合多種來源的生物醫學數據 (多模態數據) 對於全面理解和預測阿茲海默症的重要性。",
-                    tasks: [
-                        { date: "2025-12-01", desc: "探討為何需要整合多模態生醫數據進行AD研究。"},
-                        { date: "2025-12-02", desc: "了解多模態數據整合在AD早期偵測與預後分析中的潛在優勢。"},
-                        { date: "2025-12-03", desc: "學習多模態數據融合的常見策略：早期融合、晚期融合、中間融合。"},
-                        { date: "2025-12-04", desc: "初步認識集成學習 (Ensemble Learning) 等可用於多模態數據分析的方法。"},
-                        { date: "2025-12-05", desc: "了解多核學習 (Multiple Kernel Learning, MKL) 的概念。"},
-                        { date: "2025-12-06", desc: "案例研究：分析一篇整合了多種生醫數據的AI研究論文摘要。"},
-                        { date: "2025-12-07", desc: "複習本週內容，思考整合多模態數據面臨的實際挑戰。"}
-                    ]
-                },
-                {
-                    week: "Week 15 (12/8 - 12/14)",
-                    goal: "理解縱向數據在阿茲海默症研究中的價值，並初步掌握循環神經網路 (RNN) 及其變體長短期記憶網路 (LSTM)。",
-                    tasks: [
-                        { date: "2025-12-08", desc: "再次強調縱向數據在AD研究中的重要性。"},
-                        { date: "2025-12-09", desc: "學習循環神經網路 (RNN) 的基本結構與原理。"},
-                        { date: "2025-12-10", desc: "了解RNN在處理序列數據上的優勢。"},
-                        { date: "2025-12-11", desc: "學習RNN可能遇到的梯度消失/爆炸問題。"},
-                        { date: "2025-12-12", desc: "學習長短期記憶網路 (LSTM) 的基本原理與結構。"},
-                        { date: "2025-12-13", desc: "學習LSTM的核心機制：細胞狀態與三個門控單元。"},
-                        { date: "2025-12-14", desc: "初步探討LSTM在AD研究中的潛在應用。"}
-                    ]
-                },
-                {
-                    week: "Week 16 (12/15 - 12/21)",
-                    goal: "認識AI模型可解釋性 (XAI) 在醫療領域的重要性，並再次深入探討AI倫理在AD研究中的具體實踐。",
-                    tasks: [
-                        { date: "2025-12-15", desc: "探討AI模型可解釋性 (XAI) 的概念及其在醫療決策中的至關重要性。"},
-                        { date: "2025-12-16", desc: "了解缺乏可解釋性可能導致的問題。"},
-                        { date: "2025-12-17", desc: "初步了解模型內在可解釋性與事後可解釋性的區別。"},
-                        { date: "2025-12-18", desc: "概念性了解常見的XAI技術，如LIME和SHAP。"},
-                        { date: "2025-12-19", desc: "再次深入探討AI倫理中的數據偏見問題在AD研究中的具體體現。"},
-                        { date: "2025-12-20", desc: "探討在AD的AI研究中如何努力確保數據收集的包容性和代表性。"},
-                        { date: "2025-12-21", desc: "總結本週學習，思考技術發展、臨床驗證與倫理考量三者間的平衡。"}
-                    ]
-                }
-            ]
-        },
-        {
-            phase: "階段 5: (2026年1月1日 - 1月15日) - 總結、反思與未來展望",
-            goal: "鞏固所學知識，完成心得反思，並展望AI在阿茲海默症領域的未來發展方向以及個人未來可能的學習路徑。",
-            weeks: [
-                 {
-                    week: "Week 17 (12/22 - 12/28)",
-                    goal: "全面複習計畫核心知識，並了解台灣在AI輔助阿茲海默症研究領域的最新動態與主要參與機構。",
-                     tasks: [
-                        { date: "2025-12-22", desc: "系統性複習第一階段學習內容：AD病理、臨床、生物標記。"},
-                        { date: "2025-12-23", desc: "系統性複習第二階段學習內容：AI/ML/DL核心概念、Python基礎。"},
-                        { date: "2025-12-24", desc: "系統性複習第三、四階段學習內容：AI在AD的應用、模型評估、倫理。"},
-                        { date: "2025-12-25", desc: "探討台灣在AI輔助AD研究領域的最新進展與主要研究機構。"},
-                        { date: "2025-12-26", desc: "繼續了解台灣其他機構在AI與失智症研究上的努力。"},
-                        { date: "2025-12-27", desc: "了解台灣臨床失智症學會 (TDS) 等專業組織的角色。"},
-                        { date: "2025-12-28", desc: "整理本週筆記，思考台灣在此領域的優勢與潛力。"}
-                    ]
-                },
-                {
-                    week: "Week 18 (12/29 - 1/4)",
-                    goal: "展望AI在阿茲海默症領域的前沿研究方向與未來應用潛力，並開始構思「心得反思」的內容。",
-                    tasks: [
-                        { date: "2025-12-29", desc: "探討AI在AD領域更前沿的研究方向 (如 Trustworthy AI)。"},
-                        { date: "2025-12-30", desc: "了解利用AI發現極早期AD生物標記的潛力 (如數位生物標記)。"},
-                        { date: "2025-12-31", desc: "探討AI在AD新藥研發、加速臨床試驗方面的應用潛力。"},
-                        { date: "2026-01-01", desc: "認識AI醫療產品從研究到臨床實踐所面臨的挑戰 (如法規審批)。"},
-                        { date: "2026-01-02", desc: "開始草擬「心得反思」(Tab 5) 的大綱與初步內容。"},
-                        { date: "2026-01-03", desc: "繼續充實「心得反思」的內容。"},
-                        { date: "2026-01-04", desc: "專注於「心得反思」中最具啟發性的段落。"}
-                    ]
-                },
-                 {
-                    week: "Week 19 (1/5 - 1/11)",
-                    goal: "完成「心得反思」的撰寫與修改，並全面整理自主學習計畫的各項內容。",
-                    tasks: [
-                        { date: "2026-01-05", desc: "完成「心得反思」的初稿撰寫。"},
-                        { date: "2026-01-06", desc: "修改「心得反思」稿件，潤飾文字。"},
-                        { date: "2026-01-07", desc: "再次審閱「心得反思」，確保內容深度。"},
-                        { date: "2026-01-08", desc: "全面檢查「首頁」(Tab 1) 的內容。"},
-                        { date: "2026-01-09", desc: "仔細校對「學習內容規畫」(Tab 2) 的任務描述。"},
-                        { date: "2026-01-10", desc: "檢查「學習評量」(Tab 3) 的設計方向。"},
-                        { date: "2026-01-11", desc: "整理「參考資料」(Tab 6) 列表，確保格式統一、連結有效。"}
-                    ]
-                },
-                 {
-                    week: "Week 19.5 (1/12 - 1/15)",
-                    goal: "進行整個自主學習計畫的最終校對與檢查，並熟悉成果展示的基本流程。",
-                    tasks: [
-                        { date: "2026-01-12", desc: "進行整個計畫的最終文字校對。"},
-                        { date: "2026-01-13", desc: "檢查計畫的整體格式與內部連結。"},
-                        { date: "2026-01-14", desc: "初步學習並嘗試將計畫內容轉換為HTML，了解GitHub Pages部署流程。"},
-                        { date: "2026-01-15", desc: "再次通覽整個自主學習計畫，進行最終確認。"}
-                    ]
-                }
-            ]
+    <script type="module">
+        // Firebase SDK imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase configuration and App ID (to be provided by the environment)
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Default for local testing
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        let db, auth, userId, isAuthReady = false;
+        let progressChartInstance = null; // To hold the chart instance
+
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const weekSelector = document.getElementById('week-selector');
+        const weekTitleElement = document.getElementById('week-title');
+        const weekDetailsElement = document.getElementById('week-details');
+        const progressTrackerContainer = document.getElementById('progress-tracker-container');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const planSummaryDiv = document.getElementById('plan-summary');
+
+        const homeTabButton = document.getElementById('home-tab');
+        const planTabButton = document.getElementById('plan-tab');
+        const chartTabButton = document.getElementById('chart-tab');
+        
+        const homeContentDiv = document.getElementById('home-content');
+        const planContentDiv = document.getElementById('plan-content');
+        const chartContentDiv = document.getElementById('chart-content');
+        
+        const chartLoadingMessage = document.getElementById('chart-loading-message');
+        const chartErrorMessage = document.getElementById('chart-error-message');
+
+
+        // --- START OF WEEKLY PLAN DATA ---
+        const weeklyPlanData = [
+            // Week 1
+            {
+                id: "week1",
+                title: "第1週：認識阿茲海默症與AI基礎概念",
+                content: `
+                    <h1>第1週：認識阿茲海默症與AI基礎概念</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>閱讀阿茲海默症簡介（參考：<a href='https://www.tada2002.org.tw/' target='_blank' rel='noopener noreferrer'>台灣失智症協會</a>）。</li>
+                        <li>初步了解AI是什麼？什麼是機器學習？</li>
+                    </ol>
+                    <p>2. 🔍 建議影片：</p>
+                    <ul>
+                        <li><a href='https://www.youtube.com/watch?v=2ePf9rue1Ao' target='_blank' rel='noopener noreferrer'>AI入門動畫（繁中）</a></li>
+                    </ul>
+                    <p>3. 📌 重點詞彙：認知功能、神經退化、模型、特徵、分類</p>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：認識阿茲海默症與AI基礎概念</strong></p>
+                    <p><strong>時間範圍：2025/09/01 ～ 2025/09/07</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>了解阿茲海默症（AD）的基本定義、症狀與臨床影響。</li>
+                        <li>認識人工智慧（AI）與機器學習（ML）在醫療上的應用。</li>
+                        <li>建立對未來18週計畫的整體架構理解。</li>
+                    </ul>
+                    <h3>✅ 本週任務列表</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>閱讀阿茲海默症科普與醫學資源</td></tr>
+                            <tr><td>2</td><td>觀看AI與醫療應用簡介影片</td></tr>
+                            <tr><td>3</td><td>建立個人學習紀錄筆記（可用Google Docs或Zettlr）</td></tr>
+                            <tr><td>4</td><td>撰寫一篇「我為什麼選擇這個主題」的短文（約300字）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>📘 學習步驟與操作說明</h3>
+                    <h4>步驟1：認識阿茲海默症</h4>
+                    <ul>
+                        <li>🔗 推薦網站：
+                            <ul>
+                                <li><a href='https://www.tada2002.org.tw/' target='_blank' rel='noopener noreferrer'>台灣失智症協會</a></li>
+                                <li><a href='https://www.alz.org/' target='_blank' rel='noopener noreferrer'>Alzheimer’s Association（英文）</a></li>
+                            </ul>
+                        </li>
+                        <li>🧠 建議筆記欄位：
+                            <ul>
+                                <li>發病機轉</li>
+                                <li>典型症狀</li>
+                                <li>預後狀況與治療策略</li>
+                                <li>患者生活影響</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h4>步驟2：初步了解 AI 與醫療的結合</h4>
+                    <ul>
+                        <li>🔗 推薦影片：
+                            <ul>
+                                <li><a href='https://www.youtube.com/watch?v=2ePf9rue1Ao' target='_blank' rel='noopener noreferrer'>用動畫解釋什麼是AI（繁中）</a></li>
+                                <li><a href='https://www.youtube.com/watch?v=wT1aF8fIsm0' target='_blank' rel='noopener noreferrer'>AI在醫療的應用（繁中介紹）</a></li>
+                            </ul>
+                        </li>
+                        <li>📘 學習重點：
+                            <ul>
+                                <li>AI 是模擬人類思考的程式（主要靠「模型」運作）</li>
+                                <li>機器學習是讓電腦從資料中「學習」而不是被硬編程</li>
+                                <li>AI 在醫療中的應用：影像判讀、疾病預測、個人化醫療</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h4>步驟3：建立個人筆記系統</h4>
+                    <ul>
+                        <li>✅ 推薦工具：
+                            <ul>
+                                <li>Google Docs（雲端儲存、圖文並茂）</li>
+                                <li>Zettlr（Markdown語法、離線整理）</li>
+                                <li>Obsidian（圖譜式筆記，進階可考慮）</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h4>步驟4：撰寫短文：為什麼我要選擇這個主題？</h4>
+                    <ul>
+                        <li>可包含：
+                            <ul>
+                                <li>興趣背景（是否家族有病例、對AI或醫學好奇等）</li>
+                                <li>個人目標（想進一步了解腦部疾病、提升AI技術）</li>
+                                <li>對這個研究的期待（想解決什麼問題？）</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>🔖 本週成果檔案建議</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>格式</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week1_AD_intro_notes.docx</code></td><td>Word / Docs</td><td>阿茲海默症知識筆記</td></tr>
+                            <tr><td><code>week1_AI_medical_notes.docx</code></td><td>Word / Docs</td><td>AI醫療應用筆記</td></tr>
+                            <tr><td><code>week1_motivation.txt</code></td><td>純文字 / Markdown</td><td>300字動機短文</td></tr>
+                            <tr><td><code>learning_journal.md</code></td><td>Markdown / Obsidian</td><td>開始建立持續記錄筆記本</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🔍 補充說明與提示</h3>
+                    <ul>
+                        <li>本週重點為理解整體研究主題的背景，不需要寫程式。</li>
+                        <li>建議使用一天閱讀資料、一天寫筆記、一天撰寫動機，並在週末整理成果。</li>
+                        <li>不用急，進入程式與模型會在第6週之後才開始。</li>
+                    </ul>
+                `
+            },
+            // Week 2
+            {
+                id: "week2",
+                title: "第2週：環境準備與工具學習",
+                content: `
+                    <h1>第2週：環境準備與工具學習</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>註冊並熟悉 Google Colab</li>
+                        <li>安裝必要 Python 套件（我會提供Colab範本）</li>
+                    </ol>
+                    <p>2. 🛠 需安裝的套件（可直接複製進Colab執行）：</p>
+                    <pre><code class="language-python">!pip install pandas scikit-learn matplotlib seaborn</code></pre>
+                    <p>3. 📌 注意事項：</p>
+                    <ol>
+                        <li>Colab 無需安裝Python，只要有Google帳號就能使用。</li>
+                    </ol>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：環境準備與工具學習</strong></p>
+                    <p><strong>時間範圍：2025/09/08 ～ 2025/09/14</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>熟悉 AI 資料分析會用到的工具：Google Colab、Python、Jupyter Notebook。</li>
+                        <li>完成基本操作測試：能開啟 Colab 並執行簡單的 Python 程式。</li>
+                        <li>建立專屬的學習資料夾並準備後續的程式練習檔案。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>註冊並登入 Google Colab</td></tr>
+                            <tr><td>2</td><td>認識 Google Colab 操作介面與功能</td></tr>
+                            <tr><td>3</td><td>執行 Colab 上的第一段 Python 程式</td></tr>
+                            <tr><td>4</td><td>安裝未來會用到的 Python 套件（使用 pip 指令）</td></tr>
+                            <tr><td>5</td><td>建立專屬雲端學習資料夾與 Colab 筆記本</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>📘 學習與操作步驟</h3>
+                    <h4>🧭 步驟1：登入並開啟 Google Colab</h4>
+                    <ol>
+                        <li>前往 <a href="https://colab.research.google.com" target="_blank" rel="noopener noreferrer">https://colab.research.google.com</a></li>
+                        <li>使用 Google 帳號登入（如無帳號請先建立）。</li>
+                        <li>點選「檔案 → 新增筆記本」，命名為：<code>week2_intro_to_colab.ipynb</code></li>
+                    </ol>
+                    <h4>🧪 步驟2：執行第一段程式碼</h4>
+                    <p>貼上以下程式碼，然後點選左邊的▶️按鈕執行看看：</p>
+                    <pre><code class="language-python">print("Hello! 這是我在Colab上的第一個AI筆記！")</code></pre>
+                    <p>若你成功看到輸出訊息，就代表設定成功！</p>
+                    <h4>🛠 步驟3：安裝 Python 套件（這會用到 pip 指令）</h4>
+                    <pre><code class="language-python">!pip install pandas scikit-learn matplotlib seaborn</code></pre>
+                    <p>這些套件用途如下：</p>
+                    <table>
+                        <thead><tr><th>套件</th><th>用途</th></tr></thead>
+                        <tbody>
+                            <tr><td>pandas</td><td>處理資料表（如 Excel 的功能）</td></tr>
+                            <tr><td>scikit-learn</td><td>建立 AI 模型的工具庫</td></tr>
+                            <tr><td>matplotlib / seaborn</td><td>畫統計圖與資料視覺化</td></tr>
+                        </tbody>
+                    </table>
+                    <h4>🗂 步驟4：建立個人學習雲端資料夾</h4>
+                    <ol>
+                        <li>前往 <a href="https://drive.google.com/" target="_blank" rel="noopener noreferrer">Google 雲端硬碟</a></li>
+                        <li>新增資料夾：<code>AI_AD_Study</code></li>
+                        <li>將 <code>week2_intro_to_colab.ipynb</code> 存入該資料夾內</li>
+                    </ol>
+                    <p>📌 Colab 可以直接存在雲端，隨時打開繼續學習！</p>
+                    <h3>🔗 推薦學習資源</h3>
+                    <ul>
+                        <li>Colab 中文教學（影片）<br>📹 <a href="https://youtu.be/inN8seMm7UI" target="_blank" rel="noopener noreferrer">https://youtu.be/inN8seMm7UI</a></li>
+                        <li>Python基礎語法圖解：<br>📖 <a href="https://docs.python.org/zh-tw/3/tutorial/" target="_blank" rel="noopener noreferrer">https://docs.python.org/zh-tw/3/tutorial/</a></li>
+                    </ul>
+                    <h3>📝 本週成果建議提交內容</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>格式</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week2_intro_to_colab.ipynb</code></td><td>Colab / ipynb</td><td>含 Hello world 與 pip 安裝紀錄</td></tr>
+                            <tr><td><code>colab_interface_screenshot.png</code></td><td>圖片</td><td>拍一張 Colab 執行畫面</td></tr>
+                            <tr><td><code>colab_note.md</code></td><td>Markdown / Docs</td><td>學習心得與操作記錄簡述（100～200字）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧠 注意事項與小提醒</h3>
+                    <ul>
+                        <li>每次執行 Colab 時都會重置環境，因此安裝套件需每次執行。</li>
+                        <li>若出現「ModuleNotFoundError」或「Permission denied」，請重新執行安裝指令。</li>
+                        <li>若對 Python 完全陌生也不用緊張，後面會逐步指導，這週目的是熟悉工具，不要求會寫程式。</li>
+                    </ul>
+                `
+            },
+            // Week 3
+            {
+                id: "week3",
+                title: "第3週：下載Kaggle阿茲海默症資料集",
+                content: `
+                    <h1>第3週：下載Kaggle阿茲海默症資料集</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>註冊 <a href="https://www.kaggle.com/" target="_blank" rel="noopener noreferrer">Kaggle</a></li>
+                        <li>下載 Alzheimer MRI Classification 資料集</li>
+                    </ol>
+                    <p>2. 📂 資料內容：MRI影像（分為早期、中期、晚期、正常）</p>
+                    <p>3. 📌 注意事項：</p>
+                    <ol>
+                        <li>若無法處理影像，後面會改用表格式資料集</li>
+                    </ol>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：下載 Kaggle 阿茲海默症資料集</strong></p>
+                    <p><strong>時間範圍：2025/09/15 ～ 2025/09/21</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>註冊並設定 Kaggle 賬戶。</li>
+                        <li>學習如何搜尋並下載阿茲海默症相關的開放資料集。</li>
+                        <li>確認下載資料格式，並成功上傳至 Google Colab 進行後續處理。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>註冊 Kaggle 帳號並啟用 API 金鑰</td></tr>
+                            <tr><td>2</td><td>搜尋合適的阿茲海默症資料集（表格為主）</td></tr>
+                            <tr><td>3</td><td>使用 API 或手動下載資料集</td></tr>
+                            <tr><td>4</td><td>將資料上傳到 Colab 並進行基本瀏覽</td></tr>
+                            <tr><td>5</td><td>製作一張「資料摘要表」說明欄位與資料內容</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧭 步驟教學</h3>
+                    <h4>🥇 步驟1：註冊 Kaggle 並啟用 API 金鑰</h4>
+                    <ol>
+                        <li>前往 <a href="https://www.kaggle.com/" target="_blank" rel="noopener noreferrer">https://www.kaggle.com/</a> 註冊帳號。</li>
+                        <li>點選右上角大頭貼 →「Account」。</li>
+                        <li>向下捲動找到 <strong>API</strong> → 點選「Create New API Token」。</li>
+                        <li>會下載一個 <code>kaggle.json</code> 的檔案。<br>✅ 請保存這個檔案，稍後會用來在 Colab 中認證身份。</li>
+                    </ol>
+                    <h4>🧠 步驟2：選擇阿茲海默症資料集</h4>
+                    <p>✅ 推薦資料集（表格式）：</p>
+                    <ul>
+                        <li>📂 Alzheimer’s Disease Prediction Dataset<br><em>包含 MRI 標註類別資料，可支援分類模型。</em></li>
+                    </ul>
+                    <h4>🧰 步驟3：在 Colab 中下載資料集（API 方式）</h4>
+                    <p>將以下程式碼貼入 Colab 新的筆記本中：</p>
+                    <pre><code class="language-python"># 上傳 kaggle.json
+from google.colab import files
+files.upload()
+
+# 建立 .kaggle 資料夾並設定權限
+!mkdir -p ~/.kaggle
+!cp kaggle.json ~/.kaggle/
+!chmod 600 ~/.kaggle/kaggle.json
+
+# 安裝 kaggle 套件
+!pip install kaggle
+
+# 下載資料集
+!kaggle datasets download -d sasikumar31/alzheimers-dataset-4-class-of-images
+
+# 解壓縮資料
+!unzip alzheimers-dataset-4-class-of-images.zip</code></pre>
+                    <h4>📂 步驟4：上傳到 Colab（手動上傳方式備用）</h4>
+                    <p>若使用 API 有問題，也可在 Kaggle 上下載 <code>.csv</code> 檔後：</p>
+                    <ol>
+                        <li>打開 Colab，點「檔案 → 上傳 → 選擇 <code>.csv</code> 檔」。</li>
+                        <li>使用 <code>pandas</code> 開啟資料檢視：</li>
+                    </ol>
+                    <pre><code class="language-python">import pandas as pd
+df = pd.read_csv("your_file.csv")
+df.head()
+df.info()</code></pre>
+                    <h3>📋 任務成果建議產出</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week3_kaggle_download.ipynb</code></td><td>含下載程式與初步資料讀取程式碼</td></tr>
+                            <tr><td><code>data_preview_table.png</code></td><td>資料前幾行截圖，確認成功讀取</td></tr>
+                            <tr><td><code>week3_data_summary.md</code></td><td>資料欄位與意義簡介：欄位名稱、型別、預測標的說明</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>📌 小提醒</h3>
+                    <ul>
+                        <li>如果你看到 <code>FileNotFoundError</code> 或 <code>PermissionError</code>，請檢查檔案上傳與路徑。</li>
+                        <li>有些資料集中圖片與分類標籤分開，若覺得影像困難，我可幫你改為更簡單的「認知測驗數值型資料」。</li>
+                        <li>若你還不習慣 API，可本週只學習手動下載與上傳方式。</li>
+                    </ul>
+                    <h3>🔗 補充學習資源</h3>
+                    <ul>
+                        <li>Kaggle資料集下載教學影片：<br>📹 <a href="https://youtu.be/BIbVhh2RrHg" target="_blank" rel="noopener noreferrer">https://youtu.be/BIbVhh2RrHg</a></li>
+                    </ul>
+                    <h3>📘 建議閱讀資料欄位（舉例）</h3>
+                    <table>
+                        <thead><tr><th>欄位名稱</th><th>資料說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>SubjectID</code></td><td>受試者編號</td></tr>
+                            <tr><td><code>Age</code></td><td>年齡</td></tr>
+                            <tr><td><code>Gender</code></td><td>性別</td></tr>
+                            <tr><td><code>MMSE</code></td><td>簡易智能測驗分數</td></tr>
+                            <tr><td><code>CDR</code></td><td>臨床失智分數</td></tr>
+                            <tr><td><code>Diagnosis</code></td><td>分類標籤：正常、輕微認知障礙、阿茲海默症</td></tr>
+                        </tbody>
+                    </table>
+                `
+            },
+            // Week 4
+            {
+                id: "week4",
+                title: "第4週：轉換表格資料、資料讀取與瀏覽",
+                content: `
+                    <h1>第4週：轉換表格資料、資料讀取與瀏覽</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>使用 <code>pandas</code> 讀取 <code>.csv</code> 檔案</li>
+                    </ol>
+                    <p>2. 📜 參考程式碼：</p>
+                    <pre><code class="language-python">import pandas as pd
+df = pd.read_csv('your_file.csv')
+df.head()
+df.info()</code></pre>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：轉換表格資料與資料瀏覽</strong></p>
+                    <p><strong>時間範圍：2025/09/22 ～ 2025/09/28</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>能在 Colab 上成功讀取 <code>.csv</code> 格式的資料集。</li>
+                        <li>確認資料的欄位（features）與目標欄位（label）結構。</li>
+                        <li>建立初步的資料摘要報告（含資料型別、缺失值、基本統計等）。</li>
+                        <li>製作資料視覺化圖表（如長條圖、分布圖、箱型圖）。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>使用 <code>pandas</code> 讀取 <code>.csv</code> 資料集</td></tr>
+                            <tr><td>2</td><td>檢視資料集結構（欄位名稱、型別、筆數）</td></tr>
+                            <tr><td>3</td><td>分析缺失值與欄位型別</td></tr>
+                            <tr><td>4</td><td>初步統計分析（平均數、中位數、標準差）</td></tr>
+                            <tr><td>5</td><td>使用 <code>matplotlib</code> / <code>seaborn</code> 製作簡單圖表</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧪 步驟教學（Colab 代碼範本）</h3>
+                    <h4>🧾 步驟1：讀取資料集</h4>
+                    <pre><code class="language-python">import pandas as pd
+
+# 假設你已上傳 Alzheimer 資料集
+df = pd.read_csv('AlzheimerData.csv')  # ←這裡換成你的檔名
+df.head()  # 顯示前5筆</code></pre>
+                    <h4>🧐 步驟2：檢視結構與欄位</h4>
+                    <pre><code class="language-python">df.shape            # 顯示資料維度（列數, 欄數）
+df.columns          # 顯示欄位名稱
+df.info()           # 資料型別、非空值統計
+df.describe()       # 統計摘要（均值、中位數、標準差等）</code></pre>
+                    <h4>🧼 步驟3：找出缺失值</h4>
+                    <pre><code class="language-python">df.isnull().sum()   # 各欄位缺失值數量</code></pre>
+                    <p>若出現遺漏值，可先簡單刪除：</p>
+                    <pre><code class="language-python">df = df.dropna()</code></pre>
+                    <h4>📊 步驟4：資料視覺化</h4>
+                    <pre><code class="language-python">import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 年齡分佈圖
+sns.histplot(df['Age'], kde=True)
+plt.title('年齡分佈圖')
+plt.show()
+
+# CDR分數與診斷結果對比
+sns.boxplot(x='Diagnosis', y='CDR', data=df)
+plt.title('臨床失智分數（CDR） vs 診斷')
+plt.show()</code></pre>
+                    <h3>📋 任務成果建議產出</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week4_data_summary.ipynb</code></td><td>Colab 筆記本：讀取 + 描述性統計 + 缺失值分析</td></tr>
+                            <tr><td><code>week4_visual_summary.png</code></td><td>一張圖（如Age直方圖或CDR箱型圖）</td></tr>
+                            <tr><td><code>data_structure_notes.md</code></td><td>Markdown 或Word簡報：紀錄欄位名稱、型別、統計特徵</td></tr>
+                            <tr><td><code>missing_value_report.txt</code></td><td>各欄位缺失狀況紀錄（可用 <code>isnull().sum()</code> 結果整理）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🔗 補充學習資源</h3>
+                    <ul>
+                        <li>pandas官方教學（繁中翻譯版）：<br>📖 <a href="https://pandas.pydata.org/pandas-docs/stable/getting_started/index.html" target="_blank" rel="noopener noreferrer">https://pandas.pydata.org/pandas-docs/stable/getting_started/index.html</a></li>
+                        <li>seaborn圖表簡介：<br>📖 <a href="https://seaborn.pydata.org/examples/index.html" target="_blank" rel="noopener noreferrer">https://seaborn.pydata.org/examples/index.html</a></li>
+                    </ul>
+                    <h3>🔍 實作建議提醒</h3>
+                    <ul>
+                        <li>如果 <code>read_csv()</code> 出現編碼錯誤，可加入 <code>encoding='utf-8'</code> 或 <code>encoding='ISO-8859-1'</code></li>
+                        <li>圖表呈現時建議一張一張畫清楚，不要一次畫太多，避免畫面混亂</li>
+                        <li>所有欄位務必先觀察類型與內容，才不會後面建立模型時出錯</li>
+                    </ul>
+                    <h3>📝 本週應建立的知識概念</h3>
+                    <table>
+                        <thead><tr><th>概念</th><th>解釋</th></tr></thead>
+                        <tbody>
+                            <tr><td>欄位（features）</td><td>會拿來預測疾病的資訊，如年齡、MMSE分數等</td></tr>
+                            <tr><td>目標（label）</td><td>想預測的分類結果，例如是否為阿茲海默症患者</td></tr>
+                            <tr><td>缺失值</td><td>某些資料沒填寫，會影響模型訓練準確性</td></tr>
+                            <tr><td>敘述統計</td><td>平均值、標準差、最大最小值等數值概覽</td></tr>
+                            <tr><td>資料視覺化</td><td>利用圖表幫助理解資料樣貌與趨勢</td></tr>
+                        </tbody>
+                    </table>
+                `
+            },
+            // Week 5
+            {
+                id: "week5",
+                title: "第5週：資料前處理（補空值、標準化）",
+                content: `
+                    <h1>第5週：資料前處理（補空值、標準化）</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>處理遺漏值（NaN）、轉換類別型欄位、正規化資料</li>
+                    </ol>
+                    <p>2. 📜 範例程式碼：</p>
+                    <pre><code class="language-python">df = df.dropna()  # 移除空值列
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+df_scaled = scaler.fit_transform(df.drop('target', axis=1))</code></pre>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：資料前處理（補空值、標準化）</strong></p>
+                    <p><strong>時間範圍：2025/09/29 ～ 2025/10/05</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>熟悉常見資料清理技術：補空值、刪除欄位、資料型別轉換。</li>
+                        <li>理解「標準化」與「正規化」的差別，並能實作。</li>
+                        <li>建立乾淨、可用來訓練模型的資料集（<code>X</code>特徵欄位與<code>y</code>標籤欄位）。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>檢查並處理空值、異常值與非數值欄位</td></tr>
+                            <tr><td>2</td><td>對數值資料進行標準化（standardization）</td></tr>
+                            <tr><td>3</td><td>把類別資料轉為數值（label encoding / one-hot）</td></tr>
+                            <tr><td>4</td><td>區分 <code>X</code>（特徵）與 <code>y</code>（預測標籤）</td></tr>
+                            <tr><td>5</td><td>匯出乾淨資料，準備下一週特徵工程</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧪 操作步驟與 Colab 程式範例</h3>
+                    <h4>🧼 步驟1：清除空值與非數值資料</h4>
+                    <pre><code class="language-python"># 顯示缺失情況
+df.isnull().sum()
+
+# 用平均數補空值
+df['MMSE'] = df['MMSE'].fillna(df['MMSE'].mean())
+
+# 刪除缺值太多的欄位（例如缺值超過50%）
+df = df.drop(columns=['某欄位名稱'])</code></pre>
+                    <h4>🔠 步驟2：處理類別型資料</h4>
+                    <pre><code class="language-python"># 使用 Label Encoding（適合二元類別）
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+df['Gender'] = le.fit_transform(df['Gender'])  # 例如 Male=1, Female=0
+
+# 或使用 One-hot encoding（適合多類別）
+df = pd.get_dummies(df, columns=['Diagnosis'])  # 多出來一欄會代表每一類</code></pre>
+                    <h4>📏 步驟3：標準化數值資料</h4>
+                    <pre><code class="language-python">from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(df[['Age', 'MMSE', 'CDR']])  # 範例欄位</code></pre>
+                    <h4>🎯 步驟4：準備訓練資料 X 與目標欄 y</h4>
+                    <pre><code class="language-python">X = df.drop(columns=['Diagnosis'])  # 除了標籤欄的其他欄
+y = df['Diagnosis']                 # 預測目標（可能是正常 vs AD）</code></pre>
+                    <h4>💾 步驟5：儲存前處理後的資料（可選）</h4>
+                    <pre><code class="language-python">X = pd.DataFrame(X_scaled, columns=['Age', 'MMSE', 'CDR'])
+X.to_csv("cleaned_features.csv", index=False)
+y.to_csv("labels.csv", index=False)</code></pre>
+                    <h3>📋 任務成果建議產出</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week5_preprocessing.ipynb</code></td><td>Colab 筆記本：資料清理與標準化程式碼</td></tr>
+                            <tr><td><code>cleaned_features.csv</code></td><td>清理與標準化後的資料特徵欄</td></tr>
+                            <tr><td><code>labels.csv</code></td><td>預測標籤</td></tr>
+                            <tr><td><code>week5_processing_notes.md</code></td><td>Markdown 或 Word 簡記這週執行內容與遇到的問題</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧠 關鍵概念與補充說明</h3>
+                    <table>
+                        <thead><tr><th>概念</th><th>解釋</th></tr></thead>
+                        <tbody>
+                            <tr><td>缺失值處理</td><td>填補（mean、median）或刪除</td></tr>
+                            <tr><td>類別型轉換</td><td>將文字轉為數值，AI模型才能理解</td></tr>
+                            <tr><td>標準化</td><td>把不同單位或量級的數值轉成平均為0、標準差為1</td></tr>
+                            <tr><td>特徵與標籤</td><td>特徵是輸入資料，標籤是想讓AI預測的分類結果</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🔗 推薦學習資源</h3>
+                    <ul>
+                        <li>Label Encoding vs One-Hot Encoding 說明：<br>📖 <a href="https://medium.com/@contactsunny/label-encoder-vs-one-hot-encoder-in-machine-learning-3fc273365621" target="_blank" rel="noopener noreferrer">https://medium.com/@contactsunny/label-encoder-vs-one-hot-encoder-in-machine-learning-3fc273365621</a></li>
+                        <li>pandas 缺失值處理官方說明：<br>📖 <a href="https://pandas.pydata.org/docs/user_guide/missing_data.html" target="_blank" rel="noopener noreferrer">https://pandas.pydata.org/docs/user_guide/missing_data.html</a></li>
+                    </ul>
+                    <h3>⚠️ 注意事項</h3>
+                    <ul>
+                        <li>請確認轉換後資料型別（例如 <code>int64</code>, <code>float64</code>）是否正確。</li>
+                        <li>若欄位有極端數值（outliers），可用 <code>boxplot</code> 檢查是否要處理。</li>
+                        <li>不同模型對於是否需要標準化有不同需求（例如SVM需要，決策樹不太需要）。</li>
+                    </ul>
+                `
+            },
+            // Week 6
+            {
+                id: "week6",
+                title: "第6週：初步探索分析（EDA）",
+                content: `
+                    <h1>第6週：初步探索分析（EDA）</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>利用 <code>seaborn</code> 與 <code>matplotlib</code> 畫圖，檢查特徵與結果的關聯</li>
+                    </ol>
+                    <p>2. 📊 圖表示範：</p>
+                    <pre><code class="language-python">import seaborn as sns
+sns.pairplot(df, hue='target')</code></pre>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：初步探索分析（EDA, Exploratory Data Analysis）</strong></p>
+                    <p><strong>時間範圍：2025/10/06 ～ 2025/10/12</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>掌握 EDA（資料探索分析）在 AI 預測前的重要性。</li>
+                        <li>使用圖表檢查特徵與標籤的關係（例如年齡 vs 診斷結果）。</li>
+                        <li>產出能幫助理解資料分布、群體差異的視覺化結果。</li>
+                        <li>撰寫初步分析報告，預測哪些特徵可能影響診斷。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>使用直方圖與盒狀圖觀察數值分布</td></tr>
+                            <tr><td>2</td><td>使用群體比較圖（boxplot、violinplot）觀察診斷與特徵關係</td></tr>
+                            <tr><td>3</td><td>畫出特徵之間的關聯矩陣（correlation heatmap）</td></tr>
+                            <tr><td>4</td><td>撰寫簡單的資料分析報告摘要</td></tr>
+                            <tr><td>5</td><td>儲存並整理圖表與筆記，準備下週進行特徵選擇</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧪 操作步驟與 Colab 範例程式</h3>
+                    <h4>🧊 步驟1：數值型特徵分布圖（直方圖）</h4>
+                    <pre><code class="language-python">import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 直方圖：年齡分佈
+sns.histplot(df['Age'], kde=True)
+plt.title('年齡分佈')
+plt.show()</code></pre>
+                    <h4>📦 步驟2：群體比較圖（診斷 vs 特徵）</h4>
+                    <pre><code class="language-python"># 箱型圖（CDR vs 診斷結果）
+sns.boxplot(x='Diagnosis', y='CDR', data=df)
+plt.title('臨床失智分數與診斷結果')
+plt.show()
+
+# Violinplot（MMSE分數）
+sns.violinplot(x='Diagnosis', y='MMSE', data=df)
+plt.title('MMSE與診斷的分佈')
+plt.show()</code></pre>
+                    <h4>🔁 步驟3：特徵關聯性檢查（Correlation Heatmap）</h4>
+                    <pre><code class="language-python"># 只對數值型欄位進行
+corr = df.corr()
+
+plt.figure(figsize=(10, 8))
+sns.heatmap(corr, annot=True, cmap='coolwarm')
+plt.title('特徵間相關係數矩陣')
+plt.show()</code></pre>
+                    <h4>🧾 步驟4：撰寫分析摘要</h4>
+                    <p>以下是一份簡單格式（建議你以 Markdown 或 Word 撰寫）：</p>
+                    <pre><code class="language-markdown">### 初步資料分析摘要（Week 6）
+
+- 數值特徵分佈：
+  - 年齡多集中在60～80歲之間
+  - MMSE 分數與 CDR 分數在不同診斷組間有明顯區別
+
+- 診斷差異：
+  - AD組 CDR 明顯高於正常組
+  - MMSE 分數可見認知能力變化
+
+- 特徵關聯性：
+  - Age 與 CDR 稍有正相關
+  - MMSE 與 Diagnosis 呈現中度負相關</code></pre>
+                    <h3>📋 任務成果建議產出</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week6_eda_analysis.ipynb</code></td><td>Colab 筆記本：所有圖表程式碼</td></tr>
+                            <tr><td><code>week6_visual_summary.png</code></td><td>擷取幾張圖（如直方圖與heatmap）</td></tr>
+                            <tr><td><code>week6_analysis_notes.md</code></td><td>Markdown 分析摘要（特徵分布、關聯性結論）</td></tr>
+                            <tr><td><code>correlation_matrix.csv</code></td><td>Heatmap 對應的數值資料（可選）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧠 重要學習概念</h3>
+                    <table>
+                        <thead><tr><th>概念</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>直方圖</td><td>數值的分布情形（例如年齡）</td></tr>
+                            <tr><td>箱型圖</td><td>不同群體的差異與異常值比較</td></tr>
+                            <tr><td>熱力圖</td><td>各變數之間的相關係數呈現</td></tr>
+                            <tr><td>診斷特徵</td><td>預測疾病的潛在有力變數（例如MMSE、CDR）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🔗 推薦學習資源</h3>
+                    <ul>
+                        <li>Seaborn 官方範例（含中文圖解）：<br>📖 <a href="https://seaborn.pydata.org/examples/index.html" target="_blank" rel="noopener noreferrer">https://seaborn.pydata.org/examples/index.html</a></li>
+                        <li>《資料視覺化的7個經典圖表》影片（繁中）：<br>📹 <a href="https://www.youtube.com/watch?v=Swc2hlbYD4g" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=Swc2hlbYD4g</a></li>
+                    </ul>
+                    <h3>⚠️ 注意事項與建議</h3>
+                    <ul>
+                        <li>若你的資料集診斷欄位不是文字（如0/1），可以先用 <code>replace</code> 把數字轉為文字便於圖表標示。</li>
+                        <li>若圖太擁擠，可使用 <code>plt.figure(figsize=(12,6))</code> 放大畫布。</li>
+                        <li>分析重點是「哪些特徵看起來有區別」，這將直接影響下週的特徵選擇。</li>
+                    </ul>
+                `
+            },
+            // Week 7
+            {
+                id: "week7",
+                title: "第7週：特徵選擇與重要性排序",
+                content: `
+                    <h1>第7週：特徵選擇與重要性排序</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>利用隨機森林找出對預測最有幫助的特徵</li>
+                    </ol>
+                    <pre><code class="language-python">from sklearn.ensemble import RandomForestClassifier
+model = RandomForestClassifier()
+model.fit(X, y)
+importances = model.feature_importances_</code></pre>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：特徵選擇與重要性排序</strong></p>
+                    <p><strong>時間範圍：2025/10/13 ～ 2025/10/19</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>了解為什麼「特徵選擇」會影響模型效能。</li>
+                        <li>實作三種常見特徵選擇方法。</li>
+                        <li>排出最重要的 5～10 個影響阿茲海默症診斷的關鍵變數。</li>
+                        <li>學會使用圖表解釋「哪些資料對模型最重要」。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>使用隨機森林（Random Forest）進行特徵重要性排序</td></tr>
+                            <tr><td>2</td><td>使用單變數統計法（Univariate Selection）選特徵</td></tr>
+                            <tr><td>3</td><td>使用相關係數（Correlation）挑選前幾大變數</td></tr>
+                            <tr><td>4</td><td>視覺化特徵重要性圖</td></tr>
+                            <tr><td>5</td><td>撰寫本週分析報告，記錄所選欄位與理由</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧪 操作步驟與 Colab 程式範例</h3>
+                    <h4>✅ 步驟1：Random Forest 特徵重要性排序</h4>
+                    <pre><code class="language-python">from sklearn.ensemble import RandomForestClassifier
+
+model = RandomForestClassifier()
+model.fit(X, y)
+
+importances = model.feature_importances_
+feature_names = X.columns
+
+# 視覺化
+import matplotlib.pyplot as plt
+import seaborn as sns
+importance_df = pd.DataFrame({'Feature': feature_names, 'Importance': importances})
+importance_df = importance_df.sort_values(by='Importance', ascending=False)
+
+plt.figure(figsize=(10,6))
+sns.barplot(x='Importance', y='Feature', data=importance_df)
+plt.title('特徵重要性 (Random Forest)')
+plt.show()</code></pre>
+                    <h4>✅ 步驟2：單變數統計法（SelectKBest）</h4>
+                    <pre><code class="language-python">from sklearn.feature_selection import SelectKBest, f_classif
+
+selector = SelectKBest(score_func=f_classif, k=5)
+selector.fit(X, y)
+
+selected_features = X.columns[selector.get_support()]
+print("Top 5 features:", selected_features.tolist())</code></pre>
+                    <h4>✅ 步驟3：高相關係數特徵（Correlation Method）</h4>
+                    <pre><code class="language-python">correlation = df.corr()
+target_corr = correlation['Diagnosis'].drop('Diagnosis')  # 排除自己與自己
+target_corr.abs().sort_values(ascending=False).head(5)</code></pre>
+                    <h4>✅ 步驟4：合併所有選出來的特徵並比對交集</h4>
+                    <p>你可以製作一張表格，列出三種方法各自選出的前5名，看看有沒有重疊，例如：</p>
+                    <table>
+                        <thead><tr><th>特徵名稱</th><th>RF排名</th><th>SelectKBest</th><th>CorrTop5</th><th>交集備註</th></tr></thead>
+                        <tbody>
+                            <tr><td>Age</td><td>✅</td><td>✅</td><td>✅</td><td>⬅重要特徵</td></tr>
+                            <tr><td>MMSE</td><td>✅</td><td>✅</td><td></td><td></td></tr>
+                        </tbody>
+                    </table>
+                    <h3>📋 任務成果建議產出</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week7_feature_selection.ipynb</code></td><td>Colab 筆記本：含三種方法的代碼與圖表</td></tr>
+                            <tr><td><code>top_features_table.md</code></td><td>簡單表格列出選出來的特徵與理由</td></tr>
+                            <tr><td><code>feature_importance_plot.png</code></td><td>特徵排序圖（橫條圖）</td></tr>
+                            <tr><td><code>week7_feature_notes.txt</code></td><td>短文說明選出來的變數代表什麼意義、為何重要</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧠 重要學習概念</h3>
+                    <table>
+                        <thead><tr><th>概念</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>特徵選擇</td><td>找出與預測標的最有關的欄位，能提升模型表現</td></tr>
+                            <tr><td>過擬合</td><td>若使用太多無關特徵，模型可能記住雜訊，預測力變差</td></tr>
+                            <tr><td>解釋力</td><td>讓你知道模型做判斷的依據是什麼（可用來與臨床醫師溝通）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🔗 推薦學習資源</h3>
+                    <ul>
+                        <li>《Random Forest 特徵排序說明》：<br>📖 <a href="https://scikit-learn.org/stable/auto_examples/ensemble/plot_forest_importances.html" target="_blank" rel="noopener noreferrer">https://scikit-learn.org/stable/auto_examples/ensemble/plot_forest_importances.html</a></li>
+                        <li>中文教學文章（推薦）：<br>📖 <a href="https://medium.com/@blaise.peng/如何選出重要特徵-feature-selection-d58b8241fa75" target="_blank" rel="noopener noreferrer">https://medium.com/@blaise.peng/如何選出重要特徵-feature-selection-d58b8241fa75</a></li>
+                    </ul>
+                    <h3>⚠️ 注意事項</h3>
+                    <ul>
+                        <li>若 <code>y</code> 為文字型別（如 'AD', 'MCI'），請先轉換成數字或使用 LabelEncoder。</li>
+                        <li>若資料量不大，請避免挑出太多特徵，否則容易過擬合。</li>
+                        <li>可在下週正式建模前，把這週結果記錄成你模型建立的依據之一（例如：我們選了 Age、MMSE、CDR 作為特徵）。</li>
+                    </ul>
+                `
+            },
+            // Week 8
+            {
+                id: "week8",
+                title: "第8週：練習使用 AutoML（低程式替代）",
+                content: `
+                    <h1>第8週：練習使用 AutoML（低程式替代）</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>使用 Google AutoML Tables 或 Teachable Machine 試做預測模型</li>
+                    </ol>
+                    <p>2. 📌 備案：若覺得Python太難，可使用這些工具訓練模型</p>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：練習使用 AutoML（低程式替代）</strong></p>
+                    <p><strong>時間範圍：2025/10/20 ～ 2025/10/26</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>熟悉 AutoML 的概念與使用方式。</li>
+                        <li>使用 <strong>Google Teachable Machine</strong> 建立分類模型。</li>
+                        <li>使用 <strong>Google Vertex AI AutoML Tables</strong>（選用）進行表格資料自動訓練。</li>
+                        <li>匯出模型結果，評估分類效果與模型精準度。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>工具</th><th>任務說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>Teachable Machine</td><td>製作簡易分類模型（可用圖片或數字）</td></tr>
+                            <tr><td>2</td><td>Google Colab + Weka</td><td>匯入你的資料表，用 Weka 進行拖拉式訓練</td></tr>
+                            <tr><td>3</td><td>Google AutoML Tables（進階）</td><td>使用 Google Cloud 平台訓練表格型模型</td></tr>
+                            <tr><td>4</td><td></td><td>比較自動化結果與前面特徵選擇的交集</td></tr>
+                            <tr><td>5</td><td></td><td>撰寫 AutoML 使用心得與模型表現分析報告</td></tr>
+                        </tbody>
+                    </table>
+                    <h2>🧪 實作步驟詳解</h2>
+                    <h4>✅ 方法1：使用 Teachable Machine（適合無程式背景）</h4>
+                    <ol>
+                        <li>前往網站：🔗 <a href="https://teachablemachine.withgoogle.com/" target="_blank" rel="noopener noreferrer">https://teachablemachine.withgoogle.com/</a></li>
+                        <li>選擇「Tabular」或「Image Project」（根據你資料格式）</li>
+                        <li>點選「Add Classes」新增分類（例如 AD、Normal）</li>
+                        <li>匯入資料（若是圖片類，直接上傳 MRI；若是表格，需轉為 <code>.csv</code>）</li>
+                        <li>點選 <code>Train Model</code></li>
+                        <li>訓練完成後，點選 <code>Export Model</code> 查看準確率</li>
+                    </ol>
+                    <p>📝 可拍下訓練畫面或結果摘要！</p>
+                    <h4>✅ 方法2（選擇性）：使用 Weka（類似 Excel 操作方式）</h4>
+                    <ol>
+                        <li>下載 Weka：🔗 <a href="https://www.cs.waikato.ac.nz/ml/weka/downloading.html" target="_blank" rel="noopener noreferrer">https://www.cs.waikato.ac.nz/ml/weka/downloading.html</a></li>
+                        <li>將 <code>.csv</code> 資料另存為 <code>.arff</code>（我可幫你轉）</li>
+                        <li>匯入資料</li>
+                        <li>選擇分類器（如 J48 decision tree、Naive Bayes、Random Forest）</li>
+                        <li>執行訓練 → 查看模型報告（包含正確率與混淆矩陣）</li>
+                    </ol>
+                    <h4>✅ 方法3（進階）：Google Cloud Vertex AI AutoML Tables</h4>
+                    <blockquote>※ 建議熟悉英文介面或具基本雲端帳號者選擇</blockquote>
+                    <ol>
+                        <li>登入 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">https://console.cloud.google.com/</a></li>
+                        <li>啟用 Vertex AI + 建立 Dataset</li>
+                        <li>上傳 <code>.csv</code>，選擇 Label 欄位（例如 Diagnosis）</li>
+                        <li>點選「Train Model」→ 選擇預測任務（分類）</li>
+                        <li>訓練完成後會出現各類準確率、AUC 分數等</li>
+                    </ol>
+                    <h3>📋 任務成果建議產出</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week8_automl_teachable_screenshot.png</code></td><td>TM模型訓練成功畫面截圖</td></tr>
+                            <tr><td><code>week8_model_result.txt</code></td><td>記錄準確率、預測效果、訓練過程</td></tr>
+                            <tr><td><code>automl_summary_chart.png</code></td><td>匯總比較表（Weka vs Teachable vs Vertex）</td></tr>
+                            <tr><td><code>week8_reflection.md</code></td><td>Markdown短文：使用AutoML的心得與限制（可寫200字）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>📌 分析建議與小提示</h3>
+                    <table>
+                        <thead><tr><th>問題</th><th>引導思考</th></tr></thead>
+                        <tbody>
+                            <tr><td>哪些欄位自動被選為重要特徵？</td><td>與你第7週手動選的特徵一樣嗎？</td></tr>
+                            <tr><td>自動化準確率高嗎？</td><td>與預期差異在哪？哪些組別最常分類錯？</td></tr>
+                            <tr><td>優點與限制？</td><td>使用者體驗很好嗎？是否可客製化參數？</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🔗 補充學習資源</h3>
+                    <ul>
+                        <li><a href="https://youtu.be/NKW7YqzKz2o" target="_blank" rel="noopener noreferrer">Teachable Machine 教學影片（中文）</a></li>
+                        <li><a href="https://youtu.be/iqG1RZrgcH0" target="_blank" rel="noopener noreferrer">Weka GUI 簡易分類實作影片</a></li>
+                        <li>Vertex AI AutoML 教學</li>
+                    </ul>
+                    <h3>🧠 本週關鍵詞</h3>
+                    <table>
+                        <thead><tr><th>名詞</th><th>意義</th></tr></thead>
+                        <tbody>
+                            <tr><td>AutoML</td><td>不用寫程式，由電腦自動幫你選模型、特徵、訓練流程</td></tr>
+                            <tr><td>混淆矩陣</td><td>預測結果的真實 vs 預測交叉表</td></tr>
+                            <tr><td>準確率 / AUC</td><td>評估分類模型的標準指標</td></tr>
+                            <tr><td>模型匯出</td><td>AutoML 可將模型存為 Web 模型、Python、TensorFlow 等格式</td></tr>
+                        </tbody>
+                    </table>
+                `
+            },
+            // Week 9
+            {
+                id: "week9",
+                title: "第9週：資料分訓練組與測試組",
+                content: `
+                    <h1>第9週：資料分訓練組與測試組</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>使用 <code>train_test_split</code> 分資料集</li>
+                    </ol>
+                    <pre><code class="language-python">from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)</code></pre>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：資料切分與建立訓練/測試資料組</strong></p>
+                    <p><strong>時間範圍：2025/10/27 ～ 2025/11/02</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>理解為什麼要將資料分為訓練組（training set）與測試組（testing set）。</li>
+                        <li>實作 <code>train_test_split()</code> 操作，並確保分配比例合理。</li>
+                        <li>學會使用隨機種子（random_state）讓每次結果一致。</li>
+                        <li>建立好 <code>X_train</code>、<code>X_test</code>、<code>y_train</code>、<code>y_test</code> 四個資料集合，為下週建模做準備。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>使用 <code>scikit-learn</code> 的 <code>train_test_split()</code> 將資料分組</td></tr>
+                            <tr><td>2</td><td>設定測試集比例為 20% 或 30%</td></tr>
+                            <tr><td>3</td><td>確認分組後每組資料筆數正確</td></tr>
+                            <tr><td>4</td><td>儲存分組後的四個資料集（CSV 或記憶體變數）</td></tr>
+                            <tr><td>5</td><td>撰寫簡要說明資料切分策略與原因（當週學習筆記）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧪 Colab 操作步驟與程式碼</h3>
+                    <h4>步驟1：引入模組與準備資料</h4>
+                    <pre><code class="language-python">from sklearn.model_selection import train_test_split
+
+# 假設你前面已經完成特徵資料 X 和標籤資料 y
+# X: 所有預測欄位, y: 預測結果（如 Diagnosis）
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y  # stratify 可保持類別比例
+)</code></pre>
+                    <h4>步驟2：檢查切分後資料大小</h4>
+                    <pre><code class="language-python">print("X_train:", X_train.shape)
+print("X_test:", X_test.shape)
+print("y_train 分布：\\n", y_train.value_counts())
+print("y_test 分布：\\n", y_test.value_counts())</code></pre>
+                    <blockquote>✔️ 你應確認訓練資料與測試資料的數量比例為 8:2（或你設定的值），且每類資料在訓練與測試中皆有代表性。</blockquote>
+                    <h4>步驟3：儲存切分後的資料（可選）</h4>
+                    <pre><code class="language-python">X_train.to_csv("X_train.csv", index=False)
+X_test.to_csv("X_test.csv", index=False)
+y_train.to_csv("y_train.csv", index=False)
+y_test.to_csv("y_test.csv", index=False)</code></pre>
+                    <h3>📋 任務成果建議產出</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week9_split_data.ipynb</code></td><td>Colab 筆記本：包含分割與檢查代碼</td></tr>
+                            <tr><td><code>X_train.csv</code>, <code>X_test.csv</code></td><td>分好的特徵資料集</td></tr>
+                            <tr><td><code>y_train.csv</code>, <code>y_test.csv</code></td><td>對應的標籤</td></tr>
+                            <tr><td><code>week9_split_notes.md</code></td><td>Markdown：說明切分原因與比例選擇依據（如 80/20、70/30）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧠 關鍵概念解說</h3>
+                    <table>
+                        <thead><tr><th>名詞</th><th>意義</th></tr></thead>
+                        <tbody>
+                            <tr><td>訓練集（Training Set）</td><td>給模型學習的資料（例如80%）</td></tr>
+                            <tr><td>測試集（Testing Set）</td><td>給模型測試表現的資料（例如20%）</td></tr>
+                            <tr><td>random_state</td><td>固定隨機性，確保每次切分一致</td></tr>
+                            <tr><td>stratify</td><td>平衡類別分佈，避免偏差</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🔗 補充資源</h3>
+                    <ul>
+                        <li>train_test_split 中文教學文章：<br>📖 <a href="https://shengyu7697.github.io/sklearn-train_test_split/" target="_blank" rel="noopener noreferrer">https://shengyu7697.github.io/sklearn-train_test_split/</a></li>
+                        <li>類別不平衡與 Stratified Sampling 說明：<br>📖 <a href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html" target="_blank" rel="noopener noreferrer">https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html</a></li>
+                    </ul>
+                    <h3>⚠️ 注意事項</h3>
+                    <ul>
+                        <li>如果資料筆數太少，建議測試集比例不要太大（建議 20%～30%）。</li>
+                        <li>若類別不平衡（例如AD佔比很少），<code>stratify=y</code> 是必要的，否則模型訓練效果會不穩。</li>
+                        <li>確保後續模型訓練時只使用 <code>X_train</code> 與 <code>y_train</code>，預測則用 <code>X_test</code>，評估則對比 <code>y_test</code>。</li>
+                    </ul>
+                `
+            },
+            // Week 10
+            {
+                id: "week10",
+                title: "第10週：建立第一個模型：邏輯回歸（Logistic Regression）",
+                content: `
+                    <h1>第10週：建立第一個模型：邏輯回歸（Logistic Regression）</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>訓練簡單模型並計算正確率</li>
+                    </ol>
+                    <pre><code class="language-python">from sklearn.linear_model import LogisticRegression
+clf = LogisticRegression()
+clf.fit(X_train, y_train)
+clf.score(X_test, y_test)</code></pre>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：建立第一個模型：邏輯回歸（Logistic Regression）</strong></p>
+                    <p><strong>時間範圍：2025/11/03 ～ 2025/11/09</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>了解邏輯回歸是如何進行分類預測的。</li>
+                        <li>使用 <code>scikit-learn</code> 建立 Logistic Regression 模型。</li>
+                        <li>評估模型的準確度與預測結果。</li>
+                        <li>初步學會用混淆矩陣、分類報告解釋結果。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>建立 Logistic Regression 模型並訓練</td></tr>
+                            <tr><td>2</td><td>使用模型對測試資料進行預測</td></tr>
+                            <tr><td>3</td><td>計算準確率（Accuracy）</td></tr>
+                            <tr><td>4</td><td>產出混淆矩陣與分類報告</td></tr>
+                            <tr><td>5</td><td>撰寫模型分析報告（預測表現、正確與錯誤類別）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧪 Colab 操作步驟與程式碼</h3>
+                    <h4>步驟1：建立與訓練模型</h4>
+                    <pre><code class="language-python">from sklearn.linear_model import LogisticRegression
+
+# 建立模型
+model = LogisticRegression(max_iter=1000)  # 若資料大建議調高迭代次數
+model.fit(X_train, y_train)                # 開始訓練</code></pre>
+                    <h4>步驟2：進行預測與計算準確率</h4>
+                    <pre><code class="language-python"># 對測試資料進行預測
+y_pred = model.predict(X_test)
+
+# 準確率
+from sklearn.metrics import accuracy_score
+accuracy = accuracy_score(y_test, y_pred)
+print(f"準確率：{accuracy:.2f}")</code></pre>
+                    <h4>步驟3：混淆矩陣與分類報告</h4>
+                    <pre><code class="language-python">from sklearn.metrics import confusion_matrix, classification_report
+
+cm = confusion_matrix(y_test, y_pred)
+print("混淆矩陣：\\n", cm)
+
+print("分類報告：\\n", classification_report(y_test, y_pred))</code></pre>
+                    <h4>步驟4（選用）：視覺化混淆矩陣</h4>
+                    <pre><code class="language-python">import seaborn as sns
+import matplotlib.pyplot as plt
+
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+plt.xlabel("預測值")
+plt.ylabel("實際值")
+plt.title("混淆矩陣")
+plt.show()</code></pre>
+                    <h3>📋 任務成果建議產出</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week10_logistic_model.ipynb</code></td><td>Colab 筆記本：模型訓練與評估完整代碼</td></tr>
+                            <tr><td><code>confusion_matrix.png</code></td><td>混淆矩陣圖（可擷圖或 <code>plt.savefig()</code>）</td></tr>
+                            <tr><td><code>week10_model_report.md</code></td><td>Markdown 短文：準確率、錯誤分類、初步心得</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧠 關鍵學習概念</h3>
+                    <table>
+                        <thead><tr><th>名詞</th><th>意義</th></tr></thead>
+                        <tbody>
+                            <tr><td>邏輯回歸</td><td>用來預測「某事件是否發生」（0或1）的模型</td></tr>
+                            <tr><td>訓練模型</td><td>讓電腦「學習」過去資料中欄位與結果的關聯</td></tr>
+                            <tr><td>測試預測</td><td>用沒學過的資料檢驗模型表現好不好</td></tr>
+                            <tr><td>準確率（Accuracy）</td><td>預測正確的比例（但不適用於類別不平衡時）</td></tr>
+                            <tr><td>混淆矩陣</td><td>預測 vs 實際的交叉對照表，能看哪些錯最多</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🔗 推薦學習資源</h3>
+                    <ul>
+                        <li>Logistic Regression 基礎影片（繁中）：<br>📹 <a href="https://youtu.be/kNFX3y5J2N0" target="_blank" rel="noopener noreferrer">https://youtu.be/kNFX3y5J2N0</a></li>
+                        <li>sklearn 官方 Logistic Regression 文件：<br>📖 <a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html" target="_blank" rel="noopener noreferrer">https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html</a></li>
+                    </ul>
+                    <h3>⚠️ 注意事項</h3>
+                    <ul>
+                        <li>若你的 y 是文字標籤（如 “AD”, “Normal”），記得用 LabelEncoder 轉換成數字才能訓練。</li>
+                        <li>若出現 <code>ConvergenceWarning</code>，可調整 <code>max_iter=1000</code>。</li>
+                        <li>若 Accuracy 很高但模型其實預測錯很多，請查看混淆矩陣是否只預測了某一類（代表類別不平衡問題）。</li>
+                    </ul>
+                `
+            },
+            // Week 11
+            {
+                id: "week11",
+                title: "第11週：進階模型：隨機森林與支援向量機（SVM）",
+                content: `
+                    <h1>第11週：進階模型：隨機森林與支援向量機（SVM）</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>建立兩種模型並比較成效</li>
+                        <li>使用 <code>confusion_matrix</code> 與 <code>classification_report</code></li>
+                    </ol>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：進階模型：隨機森林與支援向量機（SVM）</strong></p>
+                    <p><strong>時間範圍：2025/11/10 ～ 2025/11/16</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>學會使用兩種常見的進階模型：隨機森林（Random Forest）與支援向量機（SVM）。</li>
+                        <li>進行與邏輯回歸模型的比較。</li>
+                        <li>評估三個模型的準確率、混淆矩陣與分類報告。</li>
+                        <li>練習選出最適合的模型做阿茲海默症分類任務。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>使用 RandomForestClassifier 建模與預測</td></tr>
+                            <tr><td>2</td><td>使用 SVC (Support Vector Classifier) 建模與預測</td></tr>
+                            <tr><td>3</td><td>計算三種模型（LogReg, RF, SVM）準確率</td></tr>
+                            <tr><td>4</td><td>輸出並比較三種模型的混淆矩陣與分類報告</td></tr>
+                            <tr><td>5</td><td>撰寫比較分析摘要（哪一種模型最適合？為什麼？）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧪 Colab 操作程式碼範例</h3>
+                    <h4>📘 步驟1：匯入並建立三種模型</h4>
+                    <pre><code class="language-python">from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+
+logreg = LogisticRegression(max_iter=1000)
+rf = RandomForestClassifier()
+svm = SVC(kernel='rbf', probability=True)</code></pre>
+                    <h4>🏋️ 步驟2：分別訓練與預測</h4>
+                    <pre><code class="language-python"># 訓練
+logreg.fit(X_train, y_train)
+rf.fit(X_train, y_train)
+svm.fit(X_train, y_train)
+
+# 預測
+y_pred_logreg = logreg.predict(X_test)
+y_pred_rf = rf.predict(X_test)
+y_pred_svm = svm.predict(X_test)</code></pre>
+                    <h4>📊 步驟3：模型評估（準確率 + 分類報告）</h4>
+                    <pre><code class="language-python">from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+models = {
+    "Logistic Regression": y_pred_logreg,
+    "Random Forest": y_pred_rf,
+    "SVM": y_pred_svm
+}
+
+for name, pred in models.items():
+    print(f"=== {name} ===")
+    print("Accuracy:", accuracy_score(y_test, pred))
+    print("Confusion Matrix:\\n", confusion_matrix(y_test, pred))
+    print("Classification Report:\\n", classification_report(y_test, pred))
+    print("-"*40)</code></pre>
+                    <h3>📋 任務成果建議產出</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week11_model_comparison.ipynb</code></td><td>Colab 筆記本：三模型訓練、預測、比較</td></tr>
+                            <tr><td><code>model_accuracy_table.md</code></td><td>各模型準確率與評估指標比較表</td></tr>
+                            <tr><td><code>confusion_matrix_rf.png</code>、<code>confusion_matrix_svm.png</code></td><td>混淆矩陣圖表擷取（建議用 seaborn 繪圖）</td></tr>
+                            <tr><td><code>week11_summary_report.md</code></td><td>分析心得（哪一個模型最適合你的資料？為什麼？）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧠 模型比較建議表格格式</h3>
+                    <table>
+                        <thead><tr><th>模型</th><th>Accuracy</th><th>特點</th><th>缺點</th></tr></thead>
+                        <tbody>
+                            <tr><td>Logistic Regression</td><td>0.81</td><td>執行快速、易解釋</td><td>非線性分界效果差</td></tr>
+                            <tr><td>Random Forest</td><td>0.89</td><td>抗雜訊、可看特徵重要性</td><td>訓練較慢</td></tr>
+                            <tr><td>SVM</td><td>0.85</td><td>適合少量資料與非線性</td><td>訓練時間長、不易解釋</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🔗 補充學習資源</h3>
+                    <ul>
+                        <li>隨機森林模型介紹（中文）：<br>📖 <a href="https://zhuanlan.zhihu.com/p/31823906" target="_blank" rel="noopener noreferrer">https://zhuanlan.zhihu.com/p/31823906</a></li>
+                        <li>SVM 視覺化與簡介影片（繁中）：<br>📹 <a href="https://youtu.be/_PwhiWxHK8o" target="_blank" rel="noopener noreferrer">https://youtu.be/_PwhiWxHK8o</a></li>
+                    </ul>
+                    <h3>⚠️ 注意事項</h3>
+                    <ul>
+                        <li>若資料數量不大，SVM 效果可能會比 RF 更穩定。</li>
+                        <li>RF 可用 <code>feature_importances_</code> 查看特徵排序。</li>
+                        <li>若類別不平衡，請搭配 <code>classification_report</code> 的 Precision/Recall 指標綜合評估。</li>
+                    </ul>
+                `
+            },
+            // Week 12
+            {
+                id: "week12",
+                title: "第12週：嘗試神經網路（MLP）或簡單 CNN",
+                content: `
+                    <h1>第12週：嘗試神經網路（MLP）或簡單 CNN</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>若想進階，可使用 <code>Keras</code> 建簡單神經網路模型</li>
+                        <li>若不熟，可略過這步以強化前兩週結果分析</li>
+                    </ol>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：嘗試神經網路（MLP / 簡單 CNN）</strong></p>
+                    <p><strong>時間範圍：2025/11/17 ～ 2025/11/23</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>了解「多層感知器」（MLP, Multi-layer Perceptron）的基本架構。</li>
+                        <li>使用 <code>Keras</code> 建立簡單神經網路並訓練模型。</li>
+                        <li>與機器學習模型比較預測效果與準確率。</li>
+                        <li>學會觀察訓練過程中的學習曲線（loss、accuracy）。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>使用 <code>Keras</code> 建立一個 MLP 模型</td></tr>
+                            <tr><td>2</td><td>訓練神經網路並畫出 loss/accuracy 曲線</td></tr>
+                            <tr><td>3</td><td>比較 MLP 與上週的 SVM/RF 模型準確率</td></tr>
+                            <tr><td>4</td><td>撰寫「神經網路 VS 傳統模型」分析報告</td></tr>
+                            <tr><td>5</td><td>（選做）若資料為影像，可試作簡易 CNN 架構模型</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧪 Colab MLP 操作步驟（範例）</h3>
+                    <h4>步驟1：匯入必要套件</h4>
+                    <pre><code class="language-python">from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.utils import to_categorical</code></pre>
+                    <blockquote>如果是分類任務，請將 y 做類別編碼：</blockquote>
+                    <pre><code class="language-python"># 假設 y 是 0, 1, 2 數值型分類標籤
+y_train_cat = to_categorical(y_train)
+y_test_cat = to_categorical(y_test)</code></pre>
+                    <h4>步驟2：建立 MLP 模型</h4>
+                    <pre><code class="language-python">model = Sequential()
+model.add(Dense(64, activation='relu', input_shape=(X_train.shape[1],)))
+model.add(Dense(32, activation='relu'))
+model.add(Dense(y_train_cat.shape[1], activation='softmax'))  # 多分類使用 softmax
+
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])</code></pre>
+                    <h4>步驟3：訓練模型</h4>
+                    <pre><code class="language-python">history = model.fit(X_train, y_train_cat, validation_split=0.2, epochs=30, batch_size=16)</code></pre>
+                    <h4>步驟4：畫出訓練曲線</h4>
+                    <pre><code class="language-python">import matplotlib.pyplot as plt
+
+plt.plot(history.history['accuracy'], label='train acc')
+plt.plot(history.history['val_accuracy'], label='val acc')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.title('訓練準確率')
+plt.legend()
+plt.show()</code></pre>
+                    <h4>步驟5：測試評估</h4>
+                    <pre><code class="language-python">test_loss, test_acc = model.evaluate(X_test, y_test_cat)
+print(f"測試集準確率：{test_acc:.2f}")</code></pre>
+                    <h3>📋 任務成果建議產出</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week12_mlp_model.ipynb</code></td><td>MLP 訓練流程與模型程式碼</td></tr>
+                            <tr><td><code>mlp_learning_curve.png</code></td><td>準確率/損失圖</td></tr>
+                            <tr><td><code>week12_model_compare.md</code></td><td>MLP vs SVM/RF 效果與觀察</td></tr>
+                            <tr><td><code>week12_summary.txt</code></td><td>你對神經網路模型的初步理解與評價（100-200字）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧠 本週關鍵知識點</h3>
+                    <table>
+                        <thead><tr><th>名詞</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>MLP</td><td>多層感知器，是最簡單的神經網路模型</td></tr>
+                            <tr><td>Epoch</td><td>所有資料訓練一次稱為一個 Epoch</td></tr>
+                            <tr><td>損失函數（Loss）</td><td>預測錯誤的程度</td></tr>
+                            <tr><td>過擬合</td><td>訓練好但測試差，表示模型太「記住」資料而無法泛化</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🔗 補充學習資源</h3>
+                    <ul>
+                        <li>中文 MLP 入門影片（簡單說明）<br>📹 <a href="https://youtu.be/oWbH2xcD5tE" target="_blank" rel="noopener noreferrer">https://youtu.be/oWbH2xcD5tE</a></li>
+                        <li>Keras 官方教學：<br>📖 <a href="https://keras.io/guides/sequential_model/" target="_blank" rel="noopener noreferrer">https://keras.io/guides/sequential_model/</a></li>
+                    </ul>
+                    <h3>⚠️ 注意事項</h3>
+                    <ul>
+                        <li>若訓練時 loss 不斷上升、accuracy 不變，可能是架構或資料需標準化。</li>
+                        <li>MLP 對資料的「比例一致」與「特徵範圍」敏感，請先使用 <code>StandardScaler()</code> 處理。</li>
+                        <li>訓練過程可能會因為初始參數不同而結果略有差異。</li>
+                    </ul>
+                `
+            },
+            // Week 13
+            {
+                id: "week13",
+                title: "第13週：模型評估與可視化（ROC、AUC）",
+                content: `
+                    <h1>第13週：模型評估與可視化（ROC、AUC）</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>使用 <code>roc_curve</code> 與 <code>auc</code> 圖示模型表現</li>
+                    </ol>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：模型評估與可視化（ROC、AUC）</strong></p>
+                    <p><strong>時間範圍：2025/11/24 ～ 2025/11/30</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>了解混淆矩陣以外的重要指標：ROC 曲線、AUC 值、精確率與召回率。</li>
+                        <li>用圖像評估模型預測能力是否均衡。</li>
+                        <li>比較多種模型在「二元分類」下的綜合表現。</li>
+                        <li>學會撰寫一份標準的模型效能報告。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>計算 AUC、Precision、Recall、F1-score 等指標</td></tr>
+                            <tr><td>2</td><td>繪製 ROC 曲線並比較多模型結果</td></tr>
+                            <tr><td>3</td><td>判斷模型是否「過擬合」或「類別不平衡」問題</td></tr>
+                            <tr><td>4</td><td>製作綜合模型評估圖表</td></tr>
+                            <tr><td>5</td><td>撰寫模型比較與評估結論報告（表格 + 圖表 + 解釋）</td></tr>
+                        </tbody>
+                    </table>
+                    <h2>🧪 Colab 操作步驟與程式碼範例</h2>
+                    <h4>步驟1：基本指標計算（適用所有模型）</h4>
+                    <pre><code class="language-python">from sklearn.metrics import classification_report, roc_auc_score, precision_score, recall_score, f1_score
+
+print("Precision:", precision_score(y_test, y_pred, average='macro'))
+print("Recall:", recall_score(y_test, y_pred, average='macro'))
+print("F1 Score:", f1_score(y_test, y_pred, average='macro'))</code></pre>
+                    <h4>步驟2：計算與繪製 ROC 曲線（以邏輯回歸為例）</h4>
+                    <pre><code class="language-python">from sklearn.metrics import roc_curve, auc
+import matplotlib.pyplot as plt
+
+# 假設是二分類問題，並有 predict_proba()
+y_score = model.predict_proba(X_test)[:, 1]  # 第二欄是「為 1 類」的機率
+
+fpr, tpr, thresholds = roc_curve(y_test, y_score)
+roc_auc = auc(fpr, tpr)
+
+plt.figure()
+plt.plot(fpr, tpr, color='darkorange', label=f"ROC curve (AUC = {roc_auc:.2f})")
+plt.plot([0, 1], [0, 1], color='navy', linestyle='--')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic')
+plt.legend(loc="lower right")
+plt.grid(True)
+plt.show()</code></pre>
+                    <h4>步驟3：多模型 ROC 曲線比較（可選）</h4>
+                    <pre><code class="language-python"># 假設已有模型們的預測機率：y_score_logreg, y_score_rf, y_score_svm
+models_scores = {
+    "LogReg": y_score_logreg,
+    "Random Forest": y_score_rf,
+    "SVM": y_score_svm
+}
+
+for name, score in models_scores.items():
+    fpr, tpr, _ = roc_curve(y_test, score)
+    roc_auc = auc(fpr, tpr)
+    plt.plot(fpr, tpr, label=f'{name} (AUC = {roc_auc:.2f})')
+
+plt.plot([0, 1], [0, 1], 'k--')
+plt.xlabel('FPR')
+plt.ylabel('TPR')
+plt.title('多模型 ROC 曲線比較')
+plt.legend(loc='lower right')
+plt.show()</code></pre>
+                    <h3>📋 任務成果建議產出</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week13_model_eval.ipynb</code></td><td>評估與圖表程式完整紀錄</td></tr>
+                            <tr><td><code>roc_curve_logreg.png</code>, <code>roc_curve_rf.png</code></td><td>每個模型的 ROC 圖</td></tr>
+                            <tr><td><code>model_metrics_table.md</code></td><td>模型比較表（Accuracy, AUC, F1等）</td></tr>
+                            <tr><td><code>week13_evaluation_report.md</code></td><td>綜合報告：哪個模型最平衡？遇到的問題是什麼？如何改進？</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧠 本週核心指標說明</h3>
+                    <table>
+                        <thead><tr><th>指標</th><th>定義</th><th>適用場景</th></tr></thead>
+                        <tbody>
+                            <tr><td>Accuracy</td><td>預測正確的比例</td><td>資料平衡時最常用</td></tr>
+                            <tr><td>Precision</td><td>預測為正的有多少是真的</td><td>需避免誤判陽性</td></tr>
+                            <tr><td>Recall</td><td>真正的陽性有多少被找出來</td><td>重視漏判率</td></tr>
+                            <tr><td>F1 Score</td><td>Precision & Recall 的綜合平均</td><td>資料不平衡時更重要</td></tr>
+                            <tr><td>AUC</td><td>評估模型對正負類區別能力的綜合指標</td><td>越接近1越好（0.5=隨機猜）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🔗 推薦學習資源</h3>
+                    <ul>
+                        <li>ROC 曲線與 AUC 教學（繁中）：<br>📹 <a href="https://youtu.be/4jRBRDbJemM" target="_blank" rel="noopener noreferrer">https://youtu.be/4jRBRDbJemM</a></li>
+                        <li>sklearn ROC 官方文件：<br>📖 <a href="https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html" target="_blank" rel="noopener noreferrer">https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html</a></li>
+                    </ul>
+                    <h3>⚠️ 注意事項</h3>
+                    <ul>
+                        <li>多類別資料需進行 One-vs-Rest (OvR) 處理，或僅先挑選兩類來比較。</li>
+                        <li>模型可能準確率高但 AUC 低，代表預測信心不足。</li>
+                        <li>若 Precision 很高但 Recall 很低，代表模型保守，但可能漏掉重要案例（如 AD 病患）。</li>
+                    </ul>
+                `
+            },
+            // Week 14
+            {
+                id: "week14",
+                title: "第14週：結果分析與重要特徵解釋",
+                content: `
+                    <h1>第14週：結果分析與重要特徵解釋</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>整理各模型的優劣與臨床應用性</li>
+                        <li>探討哪些特徵（如年齡、基因）對預測最重要</li>
+                    </ol>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：結果分析與重要特徵解釋</strong></p>
+                    <p><strong>時間範圍：2025/12/01 ～ 2025/12/07</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>學會解釋模型的預測依據：哪些特徵對分類最有影響。</li>
+                        <li>探討是否符合臨床認知（如：年齡高、CDR 高 → AD 機率高）。</li>
+                        <li>使用模型內建方法（如 <code>feature_importances_</code>）與 SHAP 進行可解釋性分析。</li>
+                        <li>整合數據與圖表產出「特徵分析小報告」。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>使用模型內建函數取得特徵重要性（RF、LogReg）</td></tr>
+                            <tr><td>2</td><td>製作特徵重要性視覺圖表（橫條圖）</td></tr>
+                            <tr><td>3</td><td>導入 SHAP 套件進行模型解釋（進階）</td></tr>
+                            <tr><td>4</td><td>撰寫分析結論：哪些變數與阿茲海默症關係最強？為什麼？</td></tr>
+                            <tr><td>5</td><td>製作「模型判斷依據」展示用圖表（推薦在成果發表會使用）</td></tr>
+                        </tbody>
+                    </table>
+                    <h2>🧪 Colab 操作步驟與程式碼</h2>
+                    <h4>📘 步驟1：取得特徵重要性（Random Forest）</h4>
+                    <pre><code class="language-python">import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+importances = rf.feature_importances_
+feat_names = X.columns
+imp_df = pd.DataFrame({'Feature': feat_names, 'Importance': importances})
+imp_df = imp_df.sort_values(by='Importance', ascending=False)
+
+plt.figure(figsize=(10,6))
+sns.barplot(x='Importance', y='Feature', data=imp_df)
+plt.title('特徵重要性 - Random Forest')
+plt.show()</code></pre>
+                    <h4>📗 步驟2：Logistic Regression 的係數解釋</h4>
+                    <pre><code class="language-python">coefs = logreg.coef_[0]
+coef_df = pd.DataFrame({'Feature': X.columns, 'Weight': coefs})
+coef_df = coef_df.sort_values(by='Weight', ascending=False)
+
+plt.figure(figsize=(10,6))
+sns.barplot(x='Weight', y='Feature', data=coef_df)
+plt.title('特徵影響權重 - Logistic Regression')
+plt.axvline(0, color='red', linestyle='--')
+plt.show()</code></pre>
+                    <h4>🔍 步驟3（進階）：使用 SHAP 解釋預測模型</h4>
+                    <pre><code class="language-python">!pip install shap
+
+import shap
+explainer = shap.Explainer(rf, X)
+shap_values = explainer(X)
+
+# 繪製全體特徵重要性
+shap.summary_plot(shap_values, X, plot_type="bar")
+
+# 解釋單筆預測
+shap.plots.waterfall(shap_values[0])</code></pre>
+                    <h3>📋 任務成果建議產出</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week14_feature_analysis.ipynb</code></td><td>特徵解釋完整筆記本（含圖表）</td></tr>
+                            <tr><td><code>feature_importance_rf.png</code>、<code>logreg_coeff.png</code></td><td>橫條圖：RF/LogReg 解釋圖</td></tr>
+                            <tr><td><code>shap_summary.png</code>（可選）</td><td>SHAP 模型全體解釋圖</td></tr>
+                            <tr><td><code>week14_feature_report.md</code></td><td>簡要報告：哪幾個欄位最重要？與臨床知識是否吻合？有無意外發現？</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧠 建議可解釋特徵舉例</h3>
+                    <table>
+                        <thead><tr><th>特徵名稱</th><th>說明</th><th>臨床可能意義</th></tr></thead>
+                        <tbody>
+                            <tr><td>Age</td><td>年齡</td><td>年齡大為AD主要危險因子</td></tr>
+                            <tr><td>MMSE</td><td>認知功能測驗分數</td><td>分數低 → 疑似AD</td></tr>
+                            <tr><td>CDR</td><td>臨床失智評估</td><td>分數越高，失智越嚴重</td></tr>
+                            <tr><td>APOE4</td><td>基因標記</td><td>攜帶者AD機率高（如有此欄位）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🔗 補充學習資源</h3>
+                    <ul>
+                        <li>SHAP 模型解釋官方文件：<br>📖 <a href="https://shap.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer">https://shap.readthedocs.io/en/latest/</a></li>
+                        <li>模型解釋中文教學（含SHAP）<br>📹 <a href="https://youtu.be/xSRgJ9TwF0Q" target="_blank" rel="noopener noreferrer">https://youtu.be/xSRgJ9TwF0Q</a></li>
+                    </ul>
+                    <h3>⚠️ 注意事項</h3>
+                    <ul>
+                        <li><code>RandomForestClassifier</code> 與 <code>LogisticRegression</code> 均內建特徵解釋方法，但神經網路需用 SHAP、LIME。</li>
+                        <li>特徵解釋 ≠ 因果關係，要與臨床知識交叉驗證（例如「年齡高但 CDR 低」可能為例外群）。</li>
+                    </ul>
+                `
+            },
+            // Week 15
+            {
+                id: "week15",
+                title: "第15週：AI倫理與資料偏誤分析",
+                content: `
+                    <h1>第15週：AI倫理與資料偏誤分析</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>思考模型是否對某些族群偏誤</li>
+                        <li>引導閱讀：AI公平性與醫療資料倫理文章</li>
+                    </ol>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：AI倫理與資料偏誤分析</strong></p>
+                    <p><strong>時間範圍：2025/12/08 ～ 2025/12/14</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>理解 AI 在醫療應用中可能產生的倫理與社會風險。</li>
+                        <li>檢查你使用的資料是否存在「性別偏誤」、「年齡集中」、「族群樣本不均」等問題。</li>
+                        <li>分析模型是否對特定族群預測效果較差。</li>
+                        <li>撰寫 AI 醫療模型的倫理省思報告。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>分析訓練資料中的潛在偏誤（年齡、性別、分類數量）</td></tr>
+                            <tr><td>2</td><td>比較模型在不同群體下的預測準確率</td></tr>
+                            <tr><td>3</td><td>搜集 AI 醫療倫理相關案例與爭議</td></tr>
+                            <tr><td>4</td><td>撰寫「我的模型會造成什麼風險？」分析報告</td></tr>
+                            <tr><td>5</td><td>產出一份完整的倫理聲明與偏誤補救建議</td></tr>
+                        </tbody>
+                    </table>
+                    <h2>🧪 分析與實作步驟（可用 Colab + Pandas）</h2>
+                    <h4>步驟1：檢查訓練資料分佈</h4>
+                    <pre><code class="language-python"># 以性別為例
+print(df['Gender'].value_counts())
+sns.countplot(x='Gender', hue='Diagnosis', data=df)
+
+# 年齡分佈與診斷對照
+sns.histplot(data=df, x='Age', hue='Diagnosis', kde=True)</code></pre>
+                    <h4>步驟2：模型在不同族群的表現比較（範例）</h4>
+                    <pre><code class="language-python"># 假設 Gender = 0 為女性，1 為男性
+for gender in [0, 1]:
+    subset = X_test[df['Gender'] == gender]
+    subset_y = y_test[df['Gender'] == gender]
+    y_pred = model.predict(subset)
+    acc = accuracy_score(subset_y, y_pred)
+    print(f"Gender {gender} Accuracy: {acc:.2f}")</code></pre>
+                    <blockquote>你可以依此檢查模型是否「對男性準確率高，對女性低」等偏誤問題。</blockquote>
+                    <h3>📋 任務成果建議產出</h3>
+                    <table>
+                        <thead><tr><th>檔案名稱</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>week15_ethics_bias_analysis.ipynb</code></td><td>分類準確率群體比較分析</td></tr>
+                            <tr><td><code>data_bias_chart.png</code></td><td>資料分布視覺化（如年齡 vs 診斷）</td></tr>
+                            <tr><td><code>week15_ethics_report.md</code></td><td>Markdown：模型潛在偏誤、風險、倫理反思</td></tr>
+                            <tr><td><code>model_ethics_statement.txt</code></td><td>模型使用限制與倫理聲明（可用於成果展示）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>✍️ 倫理分析報告可含內容</h3>
+                    <pre><code class="language-markdown">## 模型偏誤來源分析
+- 資料中女性樣本僅佔 30%，導致模型對女性預測效果較差。
+- 資料年齡集中在 65-75 歲，無法準確預測年輕型 AD。
+
+## 使用風險評估
+- 醫療誤判：可能導致非AD患者被誤分類，引發過度治療。
+- 公平性問題：對某族群不公平將擴大醫療資源分配差異。
+
+## 建議與補救方法
+- 擴增樣本多樣性（性別、年齡、族群）
+- 使用公平性修正工具（如 re-weighting）
+- 僅將本模型作為輔助，須由專業醫師判讀</code></pre>
+                    <h3>🔗 推薦閱讀資源</h3>
+                    <ul>
+                        <li>《AI在醫療中的公平性挑戰》：<br>📖 <a href="https://www.nature.com/articles/s41746-020-0276-6" target="_blank" rel="noopener noreferrer">https://www.nature.com/articles/s41746-020-0276-6</a></li>
+                        <li>中文影片：醫療AI可以信任嗎？<br>📹 <a href="https://youtu.be/7LR9r5pp2Gg" target="_blank" rel="noopener noreferrer">https://youtu.be/7LR9r5pp2Gg</a></li>
+                    </ul>
+                    <h3>⚠️ 注意事項</h3>
+                    <table>
+                        <thead><tr><th>問題</th><th>提醒</th></tr></thead>
+                        <tbody>
+                            <tr><td>性別/年齡不平衡？</td><td>模型可能學到「只要是老年女性就判AD」的偏誤邏輯</td></tr>
+                            <tr><td>資料代表性不足？</td><td>你的模型可能不適用於全世界或不同醫院族群</td></tr>
+                            <tr><td>模型責任誰來負？</td><td>記得「AI 只能輔助，不能代替醫師」</td></tr>
+                        </tbody>
+                    </table>
+                `
+            },
+            // Week 16
+            {
+                id: "week16",
+                title: "第16週：撰寫研究討論與個人反思",
+                content: `
+                    <h1>第16週：撰寫研究討論與個人反思</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>以 Markdown 整理研究問題與心得</li>
+                    </ol>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：撰寫研究討論與個人反思</strong></p>
+                    <p><strong>時間範圍：2025/12/15 ～ 2025/12/21</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>整合過去模型訓練、特徵分析與倫理討論，進行高層次的歸納與評價。</li>
+                        <li>練習撰寫完整的研究總結段落（可作為大學申請時的自主學習附錄或成果發表海報）。</li>
+                        <li>對自己從零開始進行 AI 輔助醫學研究的學習歷程做出反思與定位。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>撰寫一篇整體研究成果總結報告（含模型比較、特徵分析、倫理省思）</td></tr>
+                            <tr><td>2</td><td>撰寫「我在這段研究中學到什麼？」個人反思短文</td></tr>
+                            <tr><td>3</td><td>製作簡報草稿或網頁展示用摘要版本</td></tr>
+                            <tr><td>4</td><td>整理所有成果檔案並歸檔備份（可用雲端或 GitHub）</td></tr>
+                            <tr><td>5</td><td>準備下一週模擬發表或展示的素材</td></tr>
+                        </tbody>
+                    </table>
+                    <h2>📘 任務詳解</h2>
+                    <h4>📄 任務1：研究總結報告撰寫建議結構（Markdown / Word 均可）</h4>
+                    <pre><code class="language-markdown">## 研究問題與目的
+本計畫旨在利用 AI 技術輔助阿茲海默症早期診斷，探索不同模型在公開資料上的應用效果與可行性。
+
+## 方法概述
+- 資料來源：Kaggle 公開 AD 資料集
+- 預處理步驟：缺失值處理、標準化、特徵選擇
+- 模型比較：Logistic Regression、Random Forest、SVM、MLP
+
+## 研究發現
+- 最穩定模型：隨機森林（準確率 89%、AUC 0.91）
+- 關鍵特徵：CDR、MMSE、Age
+- 神經網路對訓練資料表現佳但稍有過擬合
+- 存在性別樣本偏差，女性預測效果略低
+
+## 倫理與限制
+- AI 僅能作為輔助判讀工具，不可取代臨床診斷
+- 資料分佈偏集中（年齡、種族），需更多資料支持泛化</code></pre>
+                    <h4>🧠 任務2：個人反思建議內容（100～300字）</h4>
+                    <pre><code class="language-markdown">起初我對 AI 完全不熟悉，更別說結合醫學主題。但在這 16 週的學習中，我從安裝 Colab 開始，到能使用 Logistic Regression、Random Forest、甚至 MLP 建立預測模型。我發現 AI 並不是高不可攀，只要拆解步驟、逐步學習，即使是高中生也能完成一份具有科學邏輯與實際應用潛力的研究。
+
+這段過程讓我更確定自己對醫學資訊、神經退化疾病與科技倫理的濃厚興趣，也會成為我申請大學時最想與教授分享的經歷。</code></pre>
+                    <h4>🖼 任務3：成果簡報草稿要素（PowerPoint / Google Slides / GitHub Pages）</h4>
+                    <table>
+                        <thead><tr><th>頁數</th><th>內容</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>專題名稱＋研究動機</td></tr>
+                            <tr><td>2</td><td>研究流程圖（從資料到模型）</td></tr>
+                            <tr><td>3</td><td>模型比較圖表（Accuracy + ROC）</td></tr>
+                            <tr><td>4</td><td>特徵重要性圖解＋臨床說明</td></tr>
+                            <tr><td>5</td><td>AI倫理與偏誤分析總結</td></tr>
+                            <tr><td>6</td><td>學習歷程與反思（推薦附照片或程式碼截圖）</td></tr>
+                        </tbody>
+                    </table>
+                    <h4>📦 任務4：成果歸檔建議清單</h4>
+                    <table>
+                        <thead><tr><th>資料夾</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>models/</code></td><td>所有模型的 <code>.ipynb</code> 或 <code>.h5</code></td></tr>
+                            <tr><td><code>plots/</code></td><td>所有圖表 <code>.png</code>（ROC、混淆矩陣、特徵圖）</td></tr>
+                            <tr><td><code>docs/</code></td><td>所有 <code>.md</code>、<code>.pdf</code> 或 <code>.docx</code> 報告</td></tr>
+                            <tr><td><code>final_summary.md</code></td><td>總結報告</td></tr>
+                            <tr><td><code>reflection.md</code></td><td>個人心得文</td></tr>
+                            <tr><td><code>showcase/</code></td><td>用於發表的簡報、網頁素材等</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🔗 推薦工具資源</h3>
+                    <ul>
+                        <li>免費 Markdown 編輯器：Zettlr / Typora</li>
+                        <li>GitHub Pages 展示網頁：可結合 <code>final_summary.md</code></li>
+                        <li>Google Slides 自製簡報：免費、好匯出 PDF</li>
+                        <li>Canva 免費設計圖文成果版面：<a href="https://www.canva.com/" target="_blank" rel="noopener noreferrer">https://www.canva.com/</a></li>
+                    </ul>
+                `
+            },
+            // Week 17
+            {
+                id: "week17",
+                title: "第17週：製作成果展示（可做簡報或網站）",
+                content: `
+                    <h1>第17週：製作成果展示（可做簡報或網站）</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>將成果製成 GitHub Pages 或 Google Slides 報告</li>
+                        <li>插入圖片、模型圖表、流程示意</li>
+                    </ol>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：模擬口頭發表＋檢討與修改</strong></p>
+                    <p><strong>時間範圍：2025/12/22 ～ 2025/12/28</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>熟悉如何用 3～5 分鐘時間介紹你的研究計畫。</li>
+                        <li>練習講解「為什麼你做這個題目、怎麼做、結果是什麼、有什麼意義」。</li>
+                        <li>製作簡報並進行模擬發表，請家人／老師幫忙聆聽與給建議。</li>
+                        <li>針對簡報與口頭講稿做出優化與修正。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>撰寫並背熟一篇 3 分鐘研究發表講稿（可用逐字稿格式）</td></tr>
+                            <tr><td>2</td><td>製作 6 頁左右簡報（PPT / Google Slides）</td></tr>
+                            <tr><td>3</td><td>找老師、同學或家人進行模擬口頭發表</td></tr>
+                            <tr><td>4</td><td>蒐集回饋意見並修改簡報與講稿</td></tr>
+                            <tr><td>5</td><td>將最終版簡報備份並準備上傳（或列印展示）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>📘 任務詳解與講稿建議結構（3 分鐘逐字稿）</h3>
+                    <pre><code class="language-markdown">### 開場白（約30秒）
+大家好，我是○○○，今天要分享的是我在這學期進行的自主學習研究：
+《AI輔助阿茲海默症早期偵測與預後分析》。
+
+### 動機與問題（約40秒）
+阿茲海默症是一種常見的神經退行性疾病，但早期診斷非常困難。
+我想知道：高中生是否能利用公開資料與AI工具，建立一個協助診斷的預測模型？
+
+### 研究方法（約50秒）
+我蒐集了Kaggle上的AD相關資料，使用Colab進行資料處理與模型訓練。
+比較了四種模型（Logistic Regression、Random Forest、SVM、MLP），並透過 ROC 曲線與AUC值來評估效果。
+
+### 結果與發現（約40秒）
+我發現 Random Forest 準確率最高，AUC 值達 0.91。
+最重要的特徵是 CDR、MMSE 與年齡。
+但資料中存在性別偏誤，對女性預測效果略低。
+
+### 倫理省思與收穫（約30秒）
+AI雖能協助診斷，但不能取代醫生。我也學到資料公平性與模型可解釋性的重要性。
+這次計畫讓我發現資料科學結合醫學是我未來最想探索的領域。
+
+### 結語（約15秒）
+謝謝大家，我的報告到此結束，歡迎給我建議或提問。</code></pre>
+                    <h3>📊 簡報內容建議結構（總頁數 6 頁）</h3>
+                    <table>
+                        <thead><tr><th>頁數</th><th>內容說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>標題＋姓名＋主題圖片</td></tr>
+                            <tr><td>2</td><td>研究動機與目標簡述</td></tr>
+                            <tr><td>3</td><td>研究方法流程圖（包含資料→預處理→模型→評估）</td></tr>
+                            <tr><td>4</td><td>模型比較表格＋特徵重要性圖表</td></tr>
+                            <tr><td>5</td><td>結果分析＋倫理省思（可用列點條列）</td></tr>
+                            <tr><td>6</td><td>個人收穫與未來展望（或學習歷程回顧）</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>📋 成果輸出建議</h3>
+                    <table>
+                        <thead><tr><th>項目</th><th>格式</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>final_presentation.pptx</code></td><td>PowerPoint / Slides</td><td>最終簡報檔</td></tr>
+                            <tr><td><code>speech_script.txt</code></td><td></td><td>發表講稿逐字稿</td></tr>
+                            <tr><td><code>practice_feedback.md</code></td><td></td><td>練習後修改建議（他人回饋紀錄）</td></tr>
+                            <tr><td><code>exported_poster.pdf</code></td><td></td><td>若需製作A3或A4展示用海報，可由簡報匯出</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>📌 評審／教授常見提問模擬（可練習應答）</h3>
+                    <table>
+                        <thead><tr><th>問題</th><th>建議回應方向</th></tr></thead>
+                        <tbody>
+                            <tr><td>為什麼選這個題目？</td><td>提到疾病重要性、資料來源開放、AI興趣</td></tr>
+                            <tr><td>這個模型能實際用在臨床上嗎？</td><td>說明現階段屬於輔助研究性質</td></tr>
+                            <tr><td>你在過程中最大的困難是什麼？</td><td>可誠實說明學Python或資料不平衡的挑戰</td></tr>
+                            <tr><td>你有考慮其他演算法嗎？</td><td>可提到AutoML與CNN測試過程</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>🧠 學習回顧整理工具（選用）</h3>
+                    <ul>
+                        <li>Google Jamboard：快速整理流程圖</li>
+                        <li>Notion / HackMD：整理稿件與思路</li>
+                        <li>Canva：免費製作展示圖（<a href="https://www.canva.com/" target="_blank" rel="noopener noreferrer">https://www.canva.com/</a>）</li>
+                    </ul>
+                `
+            },
+            // Week 18
+            {
+                id: "week18",
+                title: "第18週：模擬口頭發表＋檢討與修改",
+                content: `
+                    <h1>第18週：模擬口頭發表＋檢討與修改</h1>
+                    <p>1. ✅ 任務：</p>
+                    <ol>
+                        <li>練習對家人或老師簡報整個研究歷程與成果</li>
+                        <li>進行修改並完成最後定稿</li>
+                    </ol>
+                    <h3>實作素材包</h3>
+                    <p><strong>主題：最終成果發表與展示收尾</strong></p>
+                    <p><strong>時間範圍：2025/12/29 ～ 2026/01/04</strong></p>
+                    <h3>🎯 學習目標</h3>
+                    <ul>
+                        <li>完成一份可提交或展示的完整成果報告或網頁。</li>
+                        <li>完成簡報發表並可附加錄影、問答記錄等作為成果佐證。</li>
+                        <li>反思整個18週的自主學習旅程，撰寫自我總結。</li>
+                        <li>建立GitHub、雲端資料夾或網站歸檔可供分享。</li>
+                    </ul>
+                    <h3>✅ 本週任務一覽</h3>
+                    <table>
+                        <thead><tr><th>任務</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>整合所有成果製作「最終報告書」或「網頁展示」</td></tr>
+                            <tr><td>2</td><td>完成最終發表（校內發表會 / 模擬口試 / 線上展示）</td></tr>
+                            <tr><td>3</td><td>撰寫 500～800 字的學習總結報告</td></tr>
+                            <tr><td>4</td><td>建立 GitHub Pages 或 Google Drive 成果資料庫</td></tr>
+                            <tr><td>5</td><td>準備作品封面＋摘要文字，方便在升學時使用或上傳到平台</td></tr>
+                        </tbody>
+                    </table>
+                    <h3>📘 任務詳解</h3>
+                    <h4>任務1：建立《最終報告書》或《GitHub Pages 網頁》</h4>
+                    <h5>📑 最終報告建議格式（PDF或Word）</h5>
+                    <pre><code class="language-markdown">1. 封面（計畫名稱、學生姓名、學校、日期）
+2. 研究動機與問題
+3. 研究方法與流程圖
+4. 模型設計與比較（含圖表）
+5. 特徵解釋與倫理分析
+6. 結果總結與討論
+7. 個人反思與未來展望
+8. 參考資料
+9. 附錄（程式碼截圖、學習歷程照片、原始資料來源）</code></pre>
+                    <h5>🌐 GitHub Pages / 展示網站內容建議</h5>
+                    <table>
+                        <thead><tr><th>區塊</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>Home</td><td>主題名稱、個人簡介、研究動機</td></tr>
+                            <tr><td>Project</td><td>整理研究流程與成果展示（含圖表）</td></tr>
+                            <tr><td>Code</td><td>GitHub 倉庫連結或 Colab Notebook 嵌入</td></tr>
+                            <tr><td>Summary</td><td>總結與個人反思</td></tr>
+                            <tr><td>Download</td><td>附加簡報 PDF、報告 PDF 供下載</td></tr>
+                        </tbody>
+                    </table>
+                    <blockquote>可使用 Jekyll Template 或我幫你套件預設樣式。</blockquote>
+                    <h4>任務2：完成最終發表</h4>
+                    <ul>
+                        <li>若學校有成果發表會，請確保你簡報與逐字稿皆準備妥當。</li>
+                        <li>若無，可錄製 3～5 分鐘「簡報影片」並上傳 YouTube 或 Google Drive。</li>
+                        <li>模擬評審提問與回答（可請朋友／家人協助扮演評審）。</li>
+                    </ul>
+                    <h4>任務3：撰寫《學習總結與反思報告》</h4>
+                    <h5>建議段落架構（500～800字）</h5>
+                    <pre><code class="language-markdown">1. 起心動念：為什麼選這個主題？當初的期待？
+2. 過程經歷：我如何從一個 AI 初學者，變成可以分析 AD 模型的研究者？
+3. 技術挑戰：最難的地方是什麼？如何突破？我最自豪的成果？
+4. 意義與影響：我學到了哪些技能？對未來學醫或學資料科學有什麼啟發？
+5. 未來計畫：我想繼續探索什麼主題？是否想參與校內科展、申請大學專題時延伸？</code></pre>
+                    <h4>任務4：成果備份歸檔（升學／投稿用）</h4>
+                    <table>
+                        <thead><tr><th>類型</th><th>格式</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>PDF成果報告</td><td><code>.pdf</code></td><td>用於報名競賽或提交教授審查</td></tr>
+                            <tr><td>簡報文件</td><td><code>.pptx</code> / <code>.pdf</code></td><td>可作為口頭報告支援</td></tr>
+                            <tr><td>展示網頁</td><td>GitHub Pages 或 Google Sites</td><td>適合放在履歷、推薦信連結</td></tr>
+                            <tr><td>反思文</td><td><code>.md</code> / <code>.txt</code></td><td>作為升學自傳素材基礎</td></tr>
+                        </tbody>
+                    </table>
+                    <h4>任務5：成果封面與摘要（升學用）</h4>
+                    <h5>建議格式：</h5>
+                    <pre><code class="language-markdown">【主題名稱】
+AI輔助阿茲海默症早期偵測與預後分析
+
+【計畫時間】
+2025/09/01 ～ 2026/01/04（共18週）
+
+【執行者】
+建議寫真實姓名與學校名稱（升學時可改）
+
+【摘要（150字內）】
+本計畫利用公開醫學資料與機器學習模型，建立阿茲海默症分類模型，並探討特徵重要性與AI倫理議題。透過Colab進行資料處理與訓練，成功比較多種演算法效能，並完成一份具解釋力的預測流程，證明高中生也能參與前沿醫療科技應用研究。</code></pre>
+                `
+            }
+        ];
+        // --- END OF WEEKLY PLAN DATA ---
+
+        function showLoading() {
+            if (loadingIndicator) loadingIndicator.classList.remove('hidden');
         }
-    ];
 
-    const quizData = [
-        {
-            name: "第一階段 (九月) 測驗",
-            analysis: "結果顯示您對阿茲海默症的病理學基礎與臨床分期有非常好的理解。在腦影像學基礎知識方面也表現優異。建議可稍微複習CSF生物標記的具體變化，以求更臻完美。",
-            questions: [
-                { q: "下列何者是阿茲海默症最主要的兩個病理特徵？", a: ["Aβ斑塊與Tau蛋白纏結", "腦部萎縮與神經炎症", "多巴胺失調與路易氏體", "血管性病變與腦白質損傷"], correct: 0},
-                { q: "哪一種APOE基因的等位基因 (allele) 會顯著增加罹患晚發性阿茲海默症的風險？", a: ["APOE ε2", "APOE ε3", "APOE ε4", "APOE ε1"], correct: 2},
-                { q: "在阿茲海默症患者的腦脊髓液(CSF)中，通常會觀察到哪種生物標記的典型變化？", a: ["Aβ42上升，p-Tau下降", "Aβ42下降，p-Tau上升", "Aβ42與p-Tau皆上升", "Aβ42與p-Tau皆下降"], correct: 1},
-                { q: "結構性磁振造影(sMRI)在AD診斷中，最常用於觀察下列何種變化？", a: ["腦部葡萄糖代謝率", "腦血流變化", "海馬迴體積萎縮", "腦部電生理活動"], correct: 2},
-                { q: "FDG-PET主要反映的是腦部何種生理活動？", a: ["澱粉樣蛋白沉積", "Tau蛋白分布", "神經傳導物質濃度", "葡萄糖代謝活性"], correct: 3},
-                { q: "輕度認知障礙(MCI)與正常老化的健忘，最關鍵的區別在於？", a: ["記憶衰退是否影響日常生活功能", "是否偶爾忘記事情", "是否超過65歲", "是否有家族史"], correct: 0},
-                { q: "臨床失智評估量表(CDR)的主要評估面向不包含下列何者？", a: ["記憶力", "定向感", "個人衛生", "解決問題與判斷力"], correct: 2},
-                { q: "Amyloid-PET造影技術的主要目的是？", a: ["觀察腦部結構", "評估腦萎縮程度", "直接顯影腦內的Aβ斑塊", "測量腦血流量"], correct: 2},
-                { q: "根據台灣的流行病學資料，失智症的盛行率與下列何者關係最密切？", a: ["教育程度", "性別", "年齡", "職業"], correct: 2},
-                { q: "目前AD早期診斷面臨的主要挑戰之一是？", a: ["缺乏有效的治療藥物", "診斷工具成本高且具侵入性", "病患不願意就醫", "症狀與其他疾病難以區分"], correct: 1}
-            ]
-        },
-        {
-            name: "第二階段 (十月) 測驗",
-            analysis: "您對AI與機器學習的核心概念有著紮實的掌握，對Python基礎語法及常用函式庫的理解也相當不錯。AI倫理是個複雜的議題，您在此部分的表現顯示出很好的潛力。建議可以多練習Pandas的資料篩選與整理操作。",
-            questions: [
-                { q: "訓練AI模型去判斷一張腦部MRI影像屬於「AD患者」或「健康對照組」，這屬於下列哪一種機器學習任務？", a: ["回歸 (Regression)", "聚類 (Clustering)", "監督式分類 (Supervised Classification)", "強化學習 (Reinforcement Learning)"], correct: 2},
-                { q: "在Python中，若要處理表格型數據(如CSV檔案)，最常使用的函式庫是？", a: ["NumPy", "Pandas", "Matplotlib", "Scikit-learn"], correct: 1},
-                { q: "AI醫療倫理中提到的「演算法偏見」(algorithmic bias)是指？", a: ["AI模型故意做出錯誤的判斷", "AI的計算速度比人類慢", "由於訓練數據的偏差，導致模型對特定群體產生不公平的結果", "AI開發者個人的偏好"], correct: 2},
-                { q: "下列何者不是Python的基本數據類型？", a: ["Integer (整數)", "String (字串)", "Array (陣列)", "Boolean (布林值)"], correct: 2},
-                { q: "在機器學習專案流程中，「數據預處理」通常發生在哪個階段之後？", a: ["模型評估", "模型部署", "數據收集", "問題定義"], correct: 2},
-                { q: "NumPy函式庫最核心的資料結構是？", a: ["DataFrame", "Series", "ndarray", "List"], correct: 2},
-                { q: "使用`if-elif-else`語句的主要目的是？", a: ["重複執行代碼", "定義一個函數", "根據不同條件執行不同代碼塊", "儲存數據"], correct: 2},
-                { q: "世界衛生組織(WHO)提出的AI醫療倫理與治理指引，不包含下列哪項原則？", a: ["保護人類自主性", "確保利潤最大化", "促進人類福祉、安全與公共利益", "確保透明度、可解釋性與可理解性"], correct: 1},
-                { q: "若要將數據視覺化，例如繪製折線圖或長條圖，通常會使用哪個Python函式庫？", a: ["Pandas", "NumPy", "Requests", "Matplotlib"], correct: 3},
-                { q: "「非監督式學習」與「監督式學習」最大的區別在於？", a: ["使用的程式語言不同", "前者需要人工標註的數據，後者不需要", "後者需要人工標註的數據，前者不需要", "前者只能用於分類，後者只能用於回歸"], correct: 2}
-            ]
-        },
-        {
-            name: "第三階段 (十一月) 測驗",
-            analysis: "恭喜！您對深度學習，特別是CNN的核心概念有深刻的理解。對於AI在AD生物標記分析的應用也掌握得很好。模型評估指標是AI研究的基礎，您的表現非常出色。可稍微回顧數據增強的具體方法。",
-            questions: [
-                { q: "卷積神經網路(CNN)中的「卷積層」主要功能是？", a: ["降低數據維度", "提取圖像的局部特徵", "進行最終分類", "防止模型過擬合"], correct: 1},
-                { q: "在醫學影像AI中，進行影像標準化、空間對齊等「預處理」步驟的主要目的是？", a: ["增加影像的藝術性", "減少數據量以加快訓練", "提升模型效能和泛化能力", "為影像加上浮水印"], correct: 2},
-                { q: "在評估一個AD診斷模型的效能時，下列哪個指標代表「在所有真正為AD的病患中，被模型正確診斷出來的比例」？", a: ["準確率 (Accuracy)", "精確率 (Precision)", "敏感性 (Recall/Sensitivity)", "特異性 (Specificity)"], correct: 2},
-                { q: "深度學習與傳統機器學習最顯著的區別之一是？", a: ["深度學習模型通常更簡單", "深度學習能自動學習和提取特徵，而傳統機器學習需要手動進行特徵工程", "深度學習只能處理圖像數據", "傳統機器學習不需要數據"], correct: 1},
-                { q: "公開數據庫ADNI對阿茲海默症研究的主要貢獻是？", a: ["提供大量、標準化的多模態數據供全球研究者使用", "開發了第一款治療AD的藥物", "首先發現了APOE4基因", "資助所有AD相關的臨床試驗"], correct: 0},
-                { q: "在CNN中，「池化層」(Pooling Layer) 的主要作用不包含下列何者？", a: ["降低特徵圖的維度", "減少計算量", "增加模型的旋轉不變性", "保留最重要的特徵"], correct: 2},
-                { q: "ROC曲線下面積(AUC)值越接近1，通常代表模型的分類效能？", a: ["越差", "越好", "不一定", "與模型效能無關"], correct: 1},
-                { q: "AI分析血液中的p-tau217等生物標記，其最大的潛在優勢是？", a: ["100%準確", "完全取代腦影像學", "提供一種低侵入性、可及性高的篩檢工具", "成本比所有檢查都高"], correct: 2},
-                { q: "利用旋轉、平移、縮放等方法來擴充醫學影像訓練集，這種技術稱為？", a: ["數據增強 (Data Augmentation)", "特徵工程 (Feature Engineering)", "數據標準化 (Data Normalization)", "降維 (Dimensionality Reduction)"], correct: 0},
-                { q: "支持向量機(SVM)和隨機森林(Random Forest)是常用於分析下列何種數據的機器學習模型？", a: ["僅限圖像數據", "僅限時間序列數據", "結構化的數據，如CSF生物標記濃度", "僅限文字數據"], correct: 2}
-            ]
-        },
-        {
-            name: "第四階段 (十二月) 測驗",
-            analysis: "您對AI在AD預後分析及多模態整合的複雜議題掌握得相當不錯。對於LSTM和XAI等前沿概念的理解也達到了很高的水平。這顯示您已具備深入探討此領域的能力。可持續關注XAI技術的最新發展。",
-            questions: [
-                { q: "下列哪種神經網路模型最適合用來分析患者歷次認知評分的變化軌跡這類「縱向數據」？", a: ["多層感知器 (MLP)", "卷積神經網路 (CNN)", "長短期記憶網路 (LSTM)", "自編碼器 (Autoencoder)"], correct: 2},
-                { q: "在醫療AI中，強調「模型可解釋性」(XAI) 的主要原因是？", a: ["讓模型運行更快", "為了讓非技術人員也能開發模型", "建立醫病信任、發現模型偏見、釐清醫療責任", "增加模型開發成本"], correct: 2},
-                { q: "整合腦影像、基因、臨床數據等多種來源的數據來訓練AI模型，這種策略稱為？", a: ["單模態學習", "無監督學習", "多模態學習", "強化學習"], correct: 2},
-                { q: "長短期記憶網路(LSTM)被設計出來，主要是為了解決基礎RNN的什麼問題？", a: ["計算速度太慢", "只能處理圖像", "長期依賴問題 (梯度消失/爆炸)", "無法進行分類任務"], correct: 2},
-                { q: "XAI技術中的LIME和SHAP，其主要目標是？", a: ["提升模型的準確率", "解釋複雜模型(如深度學習)的單次預測結果", "自動收集訓練數據", "保護數據隱私"], correct: 1},
-                { q: "利用AI預測MCI患者是否會轉化為AD，這屬於AI在AD應用中的哪個範疇？", a: ["早期偵測", "預後分析", "治療反應預測", "藥物開發"], correct: 1},
-                { q: "將多個基於不同數據模態的模型的預測結果進行投票或加權平均，這種多模態數據融合策略屬於？", a: ["早期融合", "晚期融合", "中間融合", "特徵融合"], correct: 1},
-                { q: "在AD的AI研究中，如果訓練數據主要來自已開發國家的白人族群，可能導致模型對亞洲族群的診斷準確率下降，這具體體現了AI倫理中的哪個問題？", a: ["數據隱私洩漏", "模型可解釋性不足", "數據偏見", "責任歸屬不清"], correct: 2},
-                { q: "AI輔助制定個人化AD治療計畫，是基於AI在下列哪個方面的能力？", a: ["圖像分割", "自然語言生成", "預測疾病進程或治療反應", "數據儲存"], correct: 2},
-                { q: "LSTM網路中用來控制信息流入、保留和流出的關鍵機制是？", a: ["卷積核", "池化層", "激活函數", "門控單元 (Gates)"], correct: 3}
-            ]
+        function hideLoading() {
+            if (loadingIndicator) loadingIndicator.classList.add('hidden');
         }
-    ];
-    
-    const referencesData = [
-        { category: "學術期刊論文", items: [
-            { text: "人工智慧技術在阿爾茨海默病診治中的應用進展 (簡)", url: "https://doi.org/10.3969/j.issn.2096-5516.2024.01.009" },
-            { text: "整合FDG-PET和MRI以提高失智症的檢測和診斷", url: "https://www.airitilibrary.com/" },
-            { text: "阿茲海默氏症的危險因子、早期診斷及治療新進展", url: "https://www.airitilibrary.com/" },
-        ]},
-        { category: "機構報告與指引", items: [
-            { text: "NIA - 阿茲海默病概況 (繁中)", url: "https://www.nia.nih.gov/health/alzheimers-and-dementia/alzheimers-disease-fact-sheet-traditional-chinese" },
-            { text: "WHO - 人工智慧醫療的倫理與治理指引", url: "https://www.who.int/publications/i/item/9789240029200" },
-            { text: "台灣衛福部 - 失智症診療操作手冊 (PDF)", url: "https://www.ntshb.gov.tw/df_ufiles/226/%E8%A1%9B%E7%94%9F%E7%A6%8F%E5%88%A9%E9%83%A8%E5%A4%B1%E6%99%BA%E7%97%87%E8%A8%BA%E7%99%82%E6%89%8B%E5%86%8A1060223.pdf" },
-             { text: "台灣醫界 - 認識失智症與簡易失智18分檢測表 (PDF)", url: "https://www.tma.tw/ltk/111651104.pdf" }
-        ]},
-        { category: "線上課程與教學平台", items: [
-            { text: "MeDA School (台大) - 醫學影像AI", url: "https://www.medaschool.ai/medical-imaging-ai" },
-            { text: "Coursera - AI for Medicine Specialization", url: "https://www.coursera.org/specializations/ai-for-medicine" },
-            { text: "Coursera - Python for Everybody", url: "https://www.coursera.org/specializations/python" }
-        ]},
-        { category: "新聞報導與科普文章", items: [
-            { text: "健康醫療網 - 阿茲海默症預防與照護結合AI (專訪台大張玉玲教授)", url: "https://www.healthnews.com.tw/article/57762" },
-            { text: "中央社 - 抽血就能揪出阿茲海默症 北榮研究準確率93%", url: "https://www.cna.com.tw/news/ahel/202308160215.aspx" }
-        ]},
-        { category: "研究機構與資料庫網站", items: [
-            { text: "Alzheimer's Disease Neuroimaging Initiative (ADNI)", url: "https://adni.loni.usc.edu/" },
-            { text: "台灣臨床失智症學會 (TDS)", url: "http://www.tds.org.tw/" },
-            { text: "台灣失智症協會 (TADA)", url: "http://www.tada2002.org.tw/" }
-        ]}
-    ];
+        
+        // Function to switch tabs
+        function switchTab(activeTabId) {
+            const tabs = [
+                { button: homeTabButton, content: homeContentDiv, id: 'home' },
+                { button: planTabButton, content: planContentDiv, id: 'plan' },
+                { button: chartTabButton, content: chartContentDiv, id: 'chart' }
+            ];
 
-    const planContainer = document.getElementById('plan-container');
-    const contentTableBody = document.getElementById('content-table-body');
-    let taskIdCounter = 0;
-    
-    let progressState = JSON.parse(localStorage.getItem('alz-ai-progress')) || {};
+            tabs.forEach(tab => {
+                if (tab.id === activeTabId) {
+                    tab.button.classList.add('active', 'border-purple-500', 'text-purple-300');
+                    tab.button.classList.remove('border-transparent', 'hover:text-gray-300', 'hover:border-gray-500');
+                    tab.button.setAttribute('aria-selected', 'true');
+                    tab.content.classList.remove('hidden');
+                } else {
+                    tab.button.classList.remove('active', 'border-purple-500', 'text-purple-300');
+                    tab.button.classList.add('border-transparent', 'hover:text-gray-300', 'hover:border-gray-500');
+                    tab.button.setAttribute('aria-selected', 'false');
+                    tab.content.classList.add('hidden');
+                }
+            });
 
-    function saveProgress() {
-        localStorage.setItem('alz-ai-progress', JSON.stringify(progressState));
-        updateOverallProgress();
-    }
+            if (activeTabId === 'home') {
+                generatePlanSummary();
+            } else if (activeTabId === 'chart') {
+                generateProgressChart();
+            } else if (activeTabId === 'plan' && weekSelector.options.length > 0 && isAuthReady) {
+                // If switching to plan tab, ensure current week content is loaded
+                displayWeekContent(weekSelector.value);
+            }
+        }
 
-    planData.forEach((phase, phaseIndex) => {
-        const phaseDiv = document.createElement('div');
-        phaseDiv.className = 'bg-gray-800 rounded-lg';
-        phaseDiv.innerHTML = `
-            <div class="accordion-header p-4 flex justify-between items-center">
-                <div class="flex-grow">
-                    <h3 class="text-xl font-bold text-yellow-400">${phase.phase}</h3>
-                    <p class="text-sm text-gray-400 mt-1">${phase.goal}</p>
-                </div>
-                <span class="text-yellow-400 text-2xl transform transition-transform duration-300">&#9662;</span>
-            </div>
-            <div class="accordion-content bg-gray-900/50 rounded-b-lg"></div>
-        `;
-        const phaseContent = phaseDiv.querySelector('.accordion-content');
-
-        phase.weeks.forEach((week, weekIndex) => {
-            const weekDiv = document.createElement('div');
-            weekDiv.className = 'border-t border-gray-700';
-            weekDiv.innerHTML = `
-                <div class="accordion-header p-4">
-                    <h4 class="font-semibold text-gray-200">${week.week}</h4>
-                    <p class="text-xs text-gray-500 mt-1">${week.goal}</p>
-                </div>
-                <div class="accordion-content pl-8 pr-4 pb-4"></div>
-            `;
-            const weekContent = weekDiv.querySelector('.accordion-content');
-
-            week.tasks.forEach(task => {
-                const taskId = `task-${taskIdCounter++}`;
-                const taskDiv = document.createElement('div');
-                taskDiv.className = 'py-2 flex items-start';
-                taskDiv.innerHTML = `
-                    <input type="checkbox" id="${taskId}" data-task-id="${taskId}" class="task-checkbox mt-1.5 h-4 w-4 rounded border-gray-600 bg-gray-700 text-yellow-500 focus:ring-yellow-600">
-                    <label for="${taskId}" class="ml-3 text-sm text-gray-300 transition-colors">
-                        <span class="font-semibold">${task.date}:</span> ${task.desc}
-                    </label>
-                `;
-                weekContent.appendChild(taskDiv);
+        function generatePlanSummary() {
+            if (!planSummaryDiv) return;
+            const summaryHTML = `
+                <p class="mb-3">本自主學習計畫為期18週，旨在探索<strong>運用人工智慧(AI)技術輔助阿茲海默症的早期偵測與預後分析</strong>。計畫將引導學習者從認識阿茲海默症與AI基礎概念開始，逐步深入環境準備、資料集獲取、資料前處理、探索性資料分析(EDA)，最終建立並評估多種機器學習及深度學習模型。</p>
                 
-                const checkbox = taskDiv.querySelector(`#${taskId}`);
-                if (progressState[taskId]) {
-                    checkbox.checked = true;
-                }
-                checkbox.addEventListener('change', () => {
-                    progressState[taskId] = checkbox.checked;
-                    saveProgress();
-                });
+                <h3>學習階段重點：</h3>
+                <ul class="list-disc list-inside space-y-1 mb-3">
+                    <li><strong>基礎建立 (第1-3週):</strong> 認識阿茲海默症、AI與機器學習核心概念，熟悉Google Colab、Python等工具，並學習從Kaggle下載相關醫療資料集。</li>
+                    <li><strong>資料處理與探索 (第4-7週):</strong> 學習使用Pandas進行資料讀取與清洗，進行資料前處理（如補空值、標準化），透過EDA視覺化探索資料特性，並進行初步的特徵選擇。</li>
+                    <li><strong>模型建構與評估 (第8-13週):</strong> 嘗試AutoML工具，並親手建立多種模型，包括邏輯回歸、隨機森林、支援向量機(SVM)以及基礎神經網路(MLP)。重點在於模型訓練、預測、使用混淆矩陣、分類報告、ROC曲線與AUC值等指標進行效能評估。</li>
+                    <li><strong>進階分析與成果展現 (第14-18週):</strong> 深入分析模型結果，解釋重要特徵（可能使用SHAP等工具），探討AI倫理與資料偏誤問題。最終將撰寫研究討論、個人反思，並製作成果簡報或網站，模擬口頭發表。</li>
+                </ul>
 
-                const tableRow = document.createElement('tr');
-                tableRow.className = 'bg-gray-800 border-b border-gray-700 hover:bg-gray-600';
-                tableRow.innerHTML = `
-                    <td class="px-6 py-4">${task.date}</td>
-                    <td class="px-6 py-4">${phase.phase.split('-')[0].trim()}</td>
-                    <td class="px-6 py-4">${task.desc}</td>
-                    <td class="px-6 py-4">
-                        <input type="checkbox" data-task-id="${taskId}" class="task-checkbox h-4 w-4 rounded border-gray-600 bg-gray-700 text-yellow-500 focus:ring-yellow-600">
-                    </td>
-                `;
-                contentTableBody.appendChild(tableRow);
-                const tableCheckbox = tableRow.querySelector(`[data-task-id="${taskId}"]`);
-                if (progressState[taskId]) {
-                    tableCheckbox.checked = true;
-                }
-                 tableCheckbox.addEventListener('change', () => {
-                    progressState[taskId] = tableCheckbox.checked;
-                    document.getElementById(taskId).checked = tableCheckbox.checked;
-                    saveProgress();
-                });
-                 checkbox.addEventListener('change', () => {
-                    tableCheckbox.checked = checkbox.checked;
-                });
-            });
-            phaseContent.appendChild(weekDiv);
-        });
-        planContainer.appendChild(phaseDiv);
-    });
+                <h3>核心技能與工具：</h3>
+                <p class="mb-3">Python, Google Colab, Jupyter Notebook, Pandas, Scikit-learn, Matplotlib, Seaborn, TensorFlow/Keras, Kaggle, 資料分析, 機器學習模型建立, 模型評估, AI倫理思辨, 研究報告撰寫與表達。</p>
 
-    function updateOverallProgress() {
-        const totalTasks = taskIdCounter;
-        const completedTasks = Object.values(progressState).filter(Boolean).length;
-        const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-        
-        document.getElementById('overall-progress-text').textContent = `${percentage}%`;
-        document.getElementById('overall-progress-bar').style.width = `${percentage}%`;
-    }
-
-    const tableSearch = document.getElementById('table-search');
-    tableSearch.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        document.querySelectorAll('#content-table-body tr').forEach(row => {
-            const rowText = row.textContent.toLowerCase();
-            row.style.display = rowText.includes(searchTerm) ? '' : 'none';
-        });
-    });
-
-    const accordions = document.querySelectorAll('.accordion-header');
-    accordions.forEach(accordion => {
-        accordion.addEventListener('click', () => {
-            const content = accordion.nextElementSibling;
-            const icon = accordion.querySelector('.transform'); 
-            const isOpen = content.style.maxHeight && content.style.maxHeight !== '0px';
-
-            if (isOpen) { 
-                content.style.maxHeight = null; 
-                if (!content.classList.contains('pl-8')) { 
-                    content.style.paddingTop = '0px';
-                    content.style.paddingBottom = '0px';
-                }
-                if(icon) icon.style.transform = 'rotate(0deg)';
-            } else { 
-                content.style.maxHeight = content.scrollHeight + "px";
-                if (!content.classList.contains('pl-8')) { 
-                    content.style.paddingTop = '0.5rem'; 
-                    content.style.paddingBottom = '0.5rem';
-                }
-                if(icon) icon.style.transform = 'rotate(180deg)';
-            }
-        });
-    });
-    
-    const tabs = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const target = tab.getAttribute('data-tab');
-
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-
-            tabContents.forEach(c => c.classList.remove('active'));
-            document.getElementById(target).classList.add('active');
-        });
-    });
-
-    const quizSelector = document.getElementById('quiz-selector');
-    const quizContainer = document.getElementById('quiz-container');
-    const resultContainer = document.getElementById('quiz-result-container');
-    const quizScoreEl = document.getElementById('quiz-score');
-    const quizAnalysisEl = document.getElementById('quiz-analysis');
-    const retakeQuizBtn = document.getElementById('retake-quiz-btn');
-    const viewResultsBtn = document.getElementById('view-results-btn');
-    
-    let quizChartInstance = null;
-    let userAnswers = {};
-    let quizHistory = JSON.parse(localStorage.getItem('alz-ai-quiz-history')) || {};
-
-    function renderQuiz(quizIndex) {
-        const quiz = quizData[quizIndex];
-        resultContainer.classList.add('hidden');
-        quizContainer.innerHTML = '';
-
-        const title = document.createElement('h3');
-        title.className = "text-xl font-bold text-yellow-400 mb-6";
-        title.textContent = quiz.name;
-        quizContainer.appendChild(title);
-
-        quiz.questions.forEach((q, index) => {
-            const questionDiv = document.createElement('div');
-            questionDiv.className = 'mb-6';
-            questionDiv.innerHTML = `<p class="mb-2 font-semibold text-gray-200">${index + 1}. ${q.q}</p>`;
-            
-            const optionsDiv = document.createElement('div');
-            optionsDiv.className = 'space-y-2';
-            q.a.forEach((option, optionIndex) => {
-                optionsDiv.innerHTML += `
-                    <div class="quiz-option p-3 border-2 border-gray-600 rounded-lg cursor-pointer hover:border-yellow-500" data-question="${index}" data-option="${optionIndex}">
-                        ${option}
-                    </div>
-                `;
-            });
-            questionDiv.appendChild(optionsDiv);
-            quizContainer.appendChild(questionDiv);
-        });
-
-        const submitBtn = document.createElement('button');
-        submitBtn.id = 'submit-quiz-btn';
-        submitBtn.className = 'w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition-colors';
-        submitBtn.textContent = '提交答案';
-        quizContainer.appendChild(submitBtn);
-
-        document.querySelectorAll('.quiz-option').forEach(el => {
-            el.addEventListener('click', (e) => {
-                const qIndex = e.currentTarget.dataset.question;
-                const oIndex = e.currentTarget.dataset.option;
-                userAnswers[qIndex] = parseInt(oIndex);
-                document.querySelectorAll(`.quiz-option[data-question="${qIndex}"]`).forEach(opt => opt.classList.remove('selected'));
-                e.currentTarget.classList.add('selected');
-            });
-        });
-
-        document.getElementById('submit-quiz-btn').addEventListener('click', () => {
-            showQuizResult(quizIndex);
-        });
-    }
-
-    function showQuizResult(quizIndex, fromHistory = false) {
-        const quiz = quizData[quizIndex];
-        const currentAnswers = fromHistory ? quizHistory[quizIndex].answers : userAnswers;
-        
-        let score = 0;
-        if (!currentAnswers) {
-            quizScoreEl.textContent = "N/A";
-            quizAnalysisEl.textContent = "您尚未完成此測驗。";
-            if (quizChartInstance) quizChartInstance.destroy();
-            resultContainer.classList.remove('hidden');
-            quizContainer.innerHTML = '';
-            return;
-        }
-
-        quiz.questions.forEach((q, index) => {
-            if (currentAnswers[index] === q.correct) {
-                score++;
-            }
-        });
-        
-        quizContainer.querySelectorAll('.quiz-option').forEach(el => {
-            const qIndex = parseInt(el.dataset.question);
-            const oIndex = parseInt(el.dataset.option);
-            
-            if (oIndex === quiz.questions[qIndex].correct) {
-                el.classList.add('correct');
-            } else if (oIndex === currentAnswers[qIndex] && oIndex !== quiz.questions[qIndex].correct) {
-                el.classList.add('incorrect');
-            }
-            el.style.pointerEvents = 'none';
-        });
-
-        if (!fromHistory) {
-            const submitBtn = document.getElementById('submit-quiz-btn');
-            if(submitBtn) submitBtn.style.display = 'none';
-            quizHistory[quizIndex] = { score, total: quiz.questions.length, answers: userAnswers };
-            localStorage.setItem('alz-ai-quiz-history', JSON.stringify(quizHistory));
-        }
-
-        quizScoreEl.textContent = `${score} / ${quiz.questions.length}`;
-        quizAnalysisEl.textContent = quiz.analysis;
-
-        const correctCount = score;
-        const incorrectCount = quiz.questions.length - score;
-
-        const ctx = document.getElementById('quiz-chart').getContext('2d');
-        if(quizChartInstance) {
-            quizChartInstance.destroy();
-        }
-        quizChartInstance = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: ['答對', '答錯'],
-                datasets: [{
-                    data: [correctCount, incorrectCount],
-                    backgroundColor: ['#16a34a', '#b91c1c'],
-                    borderColor: '#1f2937',
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            color: '#e5e7eb'
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: `${quiz.name} 結果`,
-                        color: '#e5e7eb'
-                    }
-                }
-            }
-        });
-
-        resultContainer.classList.remove('hidden');
-        if(!fromHistory) {
-            quizContainer.innerHTML = '';
-        }
-    }
-    
-    quizSelector.addEventListener('change', (e) => {
-        userAnswers = {};
-        renderQuiz(parseInt(e.target.value));
-    });
-
-    retakeQuizBtn.addEventListener('click', () => {
-         userAnswers = {};
-         renderQuiz(parseInt(quizSelector.value));
-    });
-
-    viewResultsBtn.addEventListener('click', () => {
-        const quizIndex = parseInt(quizSelector.value);
-        if (quizHistory[quizIndex]) {
-            quizContainer.innerHTML = '';
-            showQuizResult(quizIndex, true);
-        } else {
-             quizContainer.innerHTML = '';
-             resultContainer.classList.remove('hidden');
-             quizScoreEl.textContent = 'N/A';
-             quizAnalysisEl.textContent = '尚無此測驗的作答紀錄。';
-             if (quizChartInstance) quizChartInstance.destroy();
-        }
-    });
-
-    const reportBtn = document.getElementById('report-btn');
-    const modal = document.getElementById('report-modal');
-    const closeModalBtn = document.getElementById('close-modal-btn');
-    const exportBtn = document.getElementById('export-report-btn');
-    let reportChartInstance = null;
-
-    reportBtn.addEventListener('click', () => {
-        const reportDetails = document.getElementById('report-details');
-        reportDetails.innerHTML = '';
-        
-        let phaseProgress = planData.map(p => ({name: p.phase.split('-')[0].trim(), total: 0, completed: 0}));
-        let currentTaskId = 0;
-        
-        planData.forEach((phase, phaseIndex) => {
-            phase.weeks.forEach(week => {
-                week.tasks.forEach(() => {
-                    const taskId = `task-${currentTaskId++}`;
-                    phaseProgress[phaseIndex].total++;
-                    if(progressState[taskId]) {
-                        phaseProgress[phaseIndex].completed++;
-                    }
-                });
-            });
-        });
-        
-        const totalTasks = taskIdCounter;
-        const completedTasks = Object.values(progressState).filter(Boolean).length;
-        const overallPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-        document.getElementById('report-overall-progress').textContent = `${overallPercentage}%`;
-        
-        phaseProgress.forEach(p => {
-            const percentage = p.total > 0 ? Math.round((p.completed / p.total) * 100) : 0;
-            const detailDiv = document.createElement('div');
-            detailDiv.innerHTML = `
-                <div class="flex justify-between items-center mb-1">
-                    <span class="text-sm font-medium text-gray-300">${p.name}</span>
-                    <span class="text-sm font-medium text-gray-300">${p.completed}/${p.total} (${percentage}%)</span>
-                </div>
-                <div class="w-full progress-bar-bg rounded-full h-2.5">
-                    <div class="progress-bar-fill h-2.5 rounded-full" style="width: ${percentage}%"></div>
-                </div>
+                <h3>預期學習成果：</h3>
+                <p>完成此計畫後，學習者將能獨立完成一個小型AI醫療應用專案，從問題定義、資料處理、模型開發到結果詮釋與倫理考量的完整流程。最終產出包括各週任務筆記、程式碼、分析報告、研究總結以及一份完整的成果展示（簡報或網頁）。</p>
             `;
-            reportDetails.appendChild(detailDiv);
-        });
-
-        const ctx = document.getElementById('report-chart').getContext('2d');
-        if (reportChartInstance) {
-            reportChartInstance.destroy();
+            planSummaryDiv.innerHTML = summaryHTML;
         }
-        reportChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: phaseProgress.map(p => p.name),
-                datasets: [{
-                    label: '完成度 (%)',
-                    data: phaseProgress.map(p => p.total > 0 ? (p.completed / p.total) * 100 : 0),
-                    backgroundColor: 'rgba(245, 158, 11, 0.6)',
-                    borderColor: 'rgba(245, 158, 11, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: { beginAtZero: true, max: 100, ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
-                    y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
-                },
-                plugins: { legend: { display: false }, title: { display: false } }
+
+        // Function to initialize Firebase
+        async function initializeFirebase() {
+            if (!firebaseConfig) {
+                console.error("Firebase config is not defined. Progress tracking will not work.");
+                isAuthReady = true; 
+                userIdDisplay.textContent = "無法連接資料庫，進度追蹤功能不可用。";
+                return;
             }
-        });
-        modal.classList.remove('hidden');
-    });
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                setLogLevel('debug'); 
 
-    closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.add('hidden');
-        }
-    });
-
-    exportBtn.addEventListener('click', () => {
-        let reportText = `自主學習計畫進度報告\n=========================\n\n`;
-        let currentTaskId = 0;
-        planData.forEach(phase => {
-            reportText += `${phase.phase}\n-------------------------\n`;
-            phase.weeks.forEach(week => {
-                reportText += `  ${week.week}\n`;
-                week.tasks.forEach(task => {
-                    const taskId = `task-${currentTaskId++}`;
-                    const status = progressState[taskId] ? '[x]' : '[ ]';
-                    reportText += `    ${status} ${task.date}: ${task.desc}\n`;
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("User is signed in with UID:", userId);
+                        userIdDisplay.textContent = `使用者ID: ${userId}`;
+                    } else {
+                        console.log("No user signed in, attempting sign-in.");
+                        if (initialAuthToken) {
+                            try {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                                console.log("Signed in with custom token.");
+                            } catch (error) {
+                                console.error("Error signing in with custom token, trying anonymous:", error);
+                                await signInAnonymously(auth);
+                                console.log("Signed in anonymously after custom token failure.");
+                            }
+                        } else {
+                            await signInAnonymously(auth);
+                            console.log("Signed in anonymously.");
+                        }
+                    }
+                    isAuthReady = true;
+                    // Handle initial tab display based on auth readiness
+                    const activeTabButton = document.querySelector('.tab-button.active');
+                    if (activeTabButton) {
+                        const activeTabId = activeTabButton.id.split('-')[0]; // e.g., 'home', 'plan', 'chart'
+                         if (activeTabId === 'home') {
+                            generatePlanSummary();
+                        } else if (activeTabId === 'plan' && weekSelector.options.length > 0) {
+                            displayWeekContent(weekSelector.value);
+                        } else if (activeTabId === 'chart') {
+                            generateProgressChart();
+                        }
+                    }
                 });
-                reportText += '\n';
+
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                isAuthReady = true; 
+                userIdDisplay.textContent = "Firebase 初始化失敗，進度追蹤功能不可用。";
+            }
+        }
+
+
+        // Function to populate week selector
+        function populateWeekSelector() {
+            weeklyPlanData.forEach(week => {
+                const option = document.createElement('option');
+                option.value = week.id;
+                option.textContent = week.title;
+                weekSelector.appendChild(option);
             });
-        });
-        const blob = new Blob([reportText], {type: 'text/plain'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = '自主學習計畫進度報告.txt';
-        a.click();
-        URL.revokeObjectURL(url);
-    });
+        }
 
-    const referencesContainer = document.getElementById('references-container');
-    referencesData.forEach(cat => {
-        const catDiv = document.createElement('div');
-        catDiv.className = "mb-6";
-        const catTitle = document.createElement('h3');
-        catTitle.className = "text-lg font-semibold text-yellow-500 mb-2 border-b border-gray-700 pb-1";
-        catTitle.textContent = cat.category;
-        catDiv.appendChild(catTitle);
+        // Function to display week content
+        async function displayWeekContent(weekId) {
+            if (!isAuthReady) {
+                console.log("Auth not ready, deferring content display for week:", weekId);
+                return;
+            }
+            if (planContentDiv.classList.contains('hidden')) {
+                return; // Only display if plan tab is active
+            }
+
+            showLoading();
+            const selectedWeek = weeklyPlanData.find(week => week.id === weekId);
+            if (selectedWeek) {
+                weekTitleElement.innerHTML = selectedWeek.title; // Use innerHTML to render if title contains HTML, otherwise textContent
+                weekDetailsElement.innerHTML = selectedWeek.content; 
+
+                progressTrackerContainer.innerHTML = '';
+                const progressDiv = document.createElement('div');
+                progressDiv.innerHTML = `
+                    <label for="progress-tracker-${selectedWeek.id}" class="block mb-2 text-sm font-medium text-gray-300">進度追蹤：</label>
+                    <select id="progress-tracker-${selectedWeek.id}" data-weekid="${selectedWeek.id}" class="progress-select bg-gray-700 border border-gray-600 text-gray-100 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full md:w-1/3 p-2.5">
+                        <option value="未開始">未開始</option>
+                        <option value="進行中">進行中</option>
+                        <option value="已完成">已完成</option>
+                    </select>
+                `;
+                progressTrackerContainer.appendChild(progressDiv);
+                
+                const progressSelect = document.getElementById(`progress-tracker-${selectedWeek.id}`);
+                if (progressSelect) {
+                    progressSelect.addEventListener('change', handleProgressChange);
+                    if (db && userId) { 
+                        await loadWeekProgress(selectedWeek.id, progressSelect);
+                    } else {
+                        console.warn("Firebase not available, progress not loaded for week:", selectedWeek.id);
+                    }
+                }
+
+            } else {
+                weekTitleElement.textContent = "未找到該週次";
+                weekDetailsElement.innerHTML = "<p>請從下拉選單中選擇一個週次。</p>";
+            }
+            hideLoading();
+        }
+
+        // Function to handle progress change
+        async function handleProgressChange(event) {
+            if (!db || !userId) {
+                console.error("Firestore not initialized or user not logged in. Cannot save progress.");
+                return;
+            }
+            const weekId = event.target.dataset.weekid;
+            const status = event.target.value;
+            showLoading();
+            try {
+                const progressDocRef = doc(db, `artifacts/${appId}/users/${userId}/studyPlanProgress/${weekId}`);
+                await setDoc(progressDocRef, { status: status });
+                console.log(`Progress for ${weekId} saved: ${status}`);
+                if (chartContentDiv && !chartContentDiv.classList.contains('hidden')) {
+                    generateProgressChart();
+                }
+            } catch (error) {
+                console.error("Error saving progress:", error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Function to load week progress
+        async function loadWeekProgress(weekId, selectElement) {
+             if (!db || !userId || !selectElement) {
+                console.warn("Cannot load progress: Firestore, userId, or selectElement missing for week:", weekId);
+                return;
+            }
+            showLoading();
+            try {
+                const progressDocRef = doc(db, `artifacts/${appId}/users/${userId}/studyPlanProgress/${weekId}`);
+                const docSnap = await getDoc(progressDocRef);
+                if (docSnap.exists()) {
+                    selectElement.value = docSnap.data().status;
+                    console.log(`Progress for ${weekId} loaded: ${docSnap.data().status}`);
+                } else {
+                    console.log(`No progress found for ${weekId}, defaulting to '未開始'.`);
+                    selectElement.value = "未開始"; 
+                }
+            } catch (error) {
+                console.error("Error loading progress:", error);
+                selectElement.value = "未開始"; 
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Function to generate progress chart
+        async function generateProgressChart() {
+            if (!isAuthReady || !db || !userId) {
+                console.warn("Chart generation deferred: Auth or DB not ready.");
+                chartErrorMessage.textContent = "無法連接資料庫以載入圖表資料。";
+                chartErrorMessage.classList.remove('hidden');
+                chartLoadingMessage.classList.add('hidden');
+                return;
+            }
+            
+            chartLoadingMessage.classList.remove('hidden');
+            chartErrorMessage.classList.add('hidden');
+
+            try {
+                const progressCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/studyPlanProgress`);
+                const querySnapshot = await getDocs(progressCollectionRef);
+
+                let progressCounts = { "未開始": 0, "進行中": 0, "已完成": 0 };
+                const allWeekIds = weeklyPlanData.map(w => w.id);
+                const fetchedProgress = {};
+
+                querySnapshot.forEach((doc) => {
+                    fetchedProgress[doc.id] = doc.data().status;
+                });
+
+                allWeekIds.forEach(weekId => {
+                    const status = fetchedProgress[weekId] || "未開始"; 
+                    if (progressCounts[status] !== undefined) {
+                        progressCounts[status]++;
+                    }
+                });
+                
+                const ctx = document.getElementById('progressChart').getContext('2d');
+                if (progressChartInstance) {
+                    progressChartInstance.destroy(); 
+                }
+                progressChartInstance = new Chart(ctx, {
+                    type: 'pie', 
+                    data: {
+                        labels: ['未開始', '進行中', '已完成'],
+                        datasets: [{
+                            label: '學習進度',
+                            data: [progressCounts['未開始'], progressCounts['進行中'], progressCounts['已完成']],
+                            backgroundColor: [
+                                'rgba(239, 68, 68, 0.7)',  // Tailwind red-500
+                                'rgba(245, 158, 11, 0.7)', // Tailwind amber-500
+                                'rgba(16, 185, 129, 0.7)'  // Tailwind emerald-500
+                            ],
+                            borderColor: [
+                                'rgba(239, 68, 68, 1)',
+                                'rgba(245, 158, 11, 1)',
+                                'rgba(16, 185, 129, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    color: '#e5e7eb' 
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: '各週進度分佈 (共18週)',
+                                color: '#e5e7eb',
+                                font: { size: 16 }
+                            },
+                             tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += context.parsed + ' 週';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                chartLoadingMessage.classList.add('hidden');
+            } catch (error) {
+                console.error("Error generating progress chart:", error);
+                chartErrorMessage.textContent = "載入圖表時發生錯誤。";
+                chartErrorMessage.classList.remove('hidden');
+                chartLoadingMessage.classList.add('hidden');
+            }
+        }
+
+
+        // Event listeners for tabs
+        homeTabButton.addEventListener('click', () => switchTab('home'));
+        planTabButton.addEventListener('click', () => switchTab('plan'));
+        chartTabButton.addEventListener('click', () => switchTab('chart'));
         
-        const list = document.createElement('ul');
-        list.className = "list-disc list-inside space-y-2 text-gray-300";
-        cat.items.forEach(item => {
-            const listItem = document.createElement('li');
-            listItem.innerHTML = `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="hover:text-yellow-400 hover:underline">${item.text}</a>`;
-            list.appendChild(listItem);
-        });
-        catDiv.appendChild(list);
-        referencesContainer.appendChild(catDiv);
-    });
-
-    const progressTrendCtx = document.getElementById('progress-trend-chart')?.getContext('2d');
-    if (progressTrendCtx) {
-        new Chart(progressTrendCtx, {
-            type: 'line',
-            data: {
-                labels: ['開始', '階段1末', '階段2末', '階段3末', '階段4末', '計畫結束'],
-                datasets: [{
-                    label: '總體進度 %',
-                    data: [0, 20, 45, 70, 90, 100], // Example data, should be dynamic later
-                    borderColor: 'rgb(245, 158, 11)',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                    fill: true,
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#e5e7eb' } } },
-                scales: { 
-                    y: { beginAtZero: true, max: 100, ticks: { color: '#9ca3af', callback: function(value) { return value + "%" } }, grid: { color: '#374151' } },
-                    x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
-                }
+        // Event listener for week selector
+        weekSelector.addEventListener('change', (event) => {
+            if (isAuthReady && planContentDiv && !planContentDiv.classList.contains('hidden')) {
+                displayWeekContent(event.target.value);
+            } else {
+                // console.log("Auth not ready or plan tab not active, week selection ignored for now.");
             }
         });
-    }
 
-    const quizAverageCtx = document.getElementById('quiz-average-chart')?.getContext('2d');
-    if (quizAverageCtx) {
-        new Chart(quizAverageCtx, {
-            type: 'bar',
-            data: {
-                labels: ['階段1測驗', '階段2測驗', '階段3測驗', '階段4測驗'],
-                datasets: [{
-                    label: '平均得分 / 10',
-                    data: [8, 7, 9, 8.5], // Example data, should be dynamic later
-                    backgroundColor: 'rgba(245, 158, 11, 0.6)',
-                    borderColor: 'rgba(245, 158, 11, 1)',
-                    borderWidth: 1,
-                    borderRadius: 5,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } }, // Hiding legend as label is clear
-                scales: { 
-                    y: { beginAtZero: true, max: 10, ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
-                    x: { ticks: { color: '#9ca3af' }, grid: { display: false } }
+        // Initialize
+        (async () => {
+            showLoading();
+            await initializeFirebase(); 
+            populateWeekSelector();
+            switchTab('home'); // Set "首頁" as the default active tab
+            
+            // The onAuthStateChanged will handle initial content loading based on the active tab
+            // For the case where Firebase is not configured, we need to manually trigger content load for home.
+            if (!firebaseConfig) {
+                generatePlanSummary(); // Ensure summary is generated if Firebase isn't used
+                if (weekSelector.options.length > 0 && planContentDiv && !planContentDiv.classList.contains('hidden')) {
+                    displayWeekContent(weekSelector.value); // Load first week if plan tab somehow becomes active
                 }
             }
-        });
-    }
+            hideLoading();
+        })();
 
-    renderQuiz(0);
-    updateOverallProgress();
-});
-</script>
-
+    </script>
 </body>
 </html>
