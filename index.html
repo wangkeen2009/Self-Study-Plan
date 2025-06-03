@@ -2108,13 +2108,21 @@ AI輔助阿茲海默症早期偵測與預後分析
             if (!firebaseConfig) {
                 console.error("Firebase config is not defined. Progress tracking will not work.");
                 isAuthReady = true; 
-                userIdDisplay.textContent = "無法連接資料庫，進度追蹤功能不可用。";
+                userIdDisplay.textContent = "無法連接資料庫，進度追蹤功能不可用(設定未提供)。"; 
+                db = null; 
+                auth = null;
                 return;
             }
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
+                if (db) {
+                    console.log("Firestore DB initialized successfully.");
+                } else {
+                    // This case should ideally be caught by getFirestore throwing an error if it fails.
+                    console.error("Firestore DB initialization failed, db is null/undefined after getFirestore().");
+                }
                 setLogLevel('debug'); 
 
                 onAuthStateChanged(auth, async (user) => {
@@ -2153,10 +2161,12 @@ AI輔助阿茲海默症早期偵測與預後分析
                     }
                 });
 
-            } catch (error) {
-                console.error("Error initializing Firebase:", error);
+            } catch (error) { // This catch is for initializeApp, getAuth, or getFirestore
+                console.error("Error initializing Firebase (initializeApp, getAuth, or getFirestore):", error);
                 isAuthReady = true; 
                 userIdDisplay.textContent = "Firebase 初始化失敗，進度追蹤功能不可用。";
+                db = null; // Explicitly set db to null on catch
+                auth = null;
             }
         }
 
@@ -2184,7 +2194,7 @@ AI輔助阿茲海默症早期偵測與預後分析
             showLoading();
             const selectedWeek = weeklyPlanData.find(week => week.id === weekId);
             if (selectedWeek) {
-                weekTitleElement.innerHTML = selectedWeek.title; // Use innerHTML to render if title contains HTML, otherwise textContent
+                weekTitleElement.innerHTML = selectedWeek.title; 
                 weekDetailsElement.innerHTML = selectedWeek.content; 
 
                 progressTrackerContainer.innerHTML = '';
@@ -2271,6 +2281,10 @@ AI輔助阿茲海默症早期偵測與預後分析
                 chartErrorMessage.textContent = "無法連接資料庫以載入圖表資料。";
                 chartErrorMessage.classList.remove('hidden');
                 chartLoadingMessage.classList.add('hidden');
+                if (progressChartInstance) { // Clear previous chart if any
+                    progressChartInstance.destroy();
+                    progressChartInstance = null;
+                }
                 return;
             }
             
@@ -2359,6 +2373,10 @@ AI輔助阿茲海默症早期偵測與預後分析
                 chartErrorMessage.textContent = "載入圖表時發生錯誤。";
                 chartErrorMessage.classList.remove('hidden');
                 chartLoadingMessage.classList.add('hidden');
+                 if (progressChartInstance) { // Clear previous chart if any on error
+                    progressChartInstance.destroy();
+                    progressChartInstance = null;
+                }
             }
         }
 
@@ -2389,7 +2407,7 @@ AI輔助阿茲海默症早期偵測與預後分析
             if (!firebaseConfig) {
                 generatePlanSummary(); // Ensure summary is generated if Firebase isn't used
                 if (weekSelector.options.length > 0 && planContentDiv && !planContentDiv.classList.contains('hidden')) {
-                    displayWeekContent(weekSelector.value); // Load first week if plan tab somehow becomes active
+                    displayWeekContent(weekSelector.value); 
                 }
             }
             hideLoading();
