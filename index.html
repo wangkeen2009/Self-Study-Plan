@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>18週AI與阿茲海默症自主學習計畫</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Custom scrollbar for webkit browsers */
         ::-webkit-scrollbar {
@@ -108,16 +107,6 @@
             margin-bottom: 0.5rem; /* mb-2 */
         }
         
-        /* Chart title */
-        #chart-content h2 {
-            font-size: 1.875rem; /* text-2xl */
-            line-height: 2.25rem;
-            font-weight: 600; /* semibold */
-            color: #c4b5fd; /* purple-300 */
-            margin-bottom: 1.5rem; /* mb-6 */
-        }
-
-
         ul { list-style-type: disc; margin-left: 1.5rem; padding-left: 0.5rem; }
         ol { list-style-type: decimal; margin-left: 1.5rem; padding-left: 0.5rem; }
         li { margin-bottom: 0.25rem; }
@@ -142,13 +131,21 @@
 
 
         /* Tab styling */
+        .tab-button {
+            font-size: 1.5rem; /* text-2xl - Increased font size */
+            font-weight: 600; /* semibold - Added bold */
+            border-bottom-width: 2px; 
+            color: #f59e0b; /* text-yellow-500 - Goose yellow for non-active tabs */
+        }
+        .tab-button:hover {
+            color: #fcd34d; /* text-yellow-400 - Lighter yellow on hover */
+            border-color: #f59e0b; /* border-yellow-500 */
+        }
         .tab-button.active {
             border-color: #8b5cf6; /* border-purple-500 */
-            color: #c4b5fd; /* text-purple-300 */
+            color: #c4b5fd; /* text-purple-300 - Keep purple for active tab for contrast */
         }
-         .tab-button {
-            border-bottom-width: 2px; /* Default border width for tabs */
-         }
+
         audio {
             filter: invert(0.9) hue-rotate(180deg) contrast(0.9); /* Basic dark mode for audio player */
             border-radius: 0.375rem; /* rounded-md */
@@ -162,15 +159,12 @@
         </header>
 
         <div class="mb-4 border-b border-gray-700">
-            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="mainTab" role="tablist">
+            <ul class="flex flex-wrap -mb-px font-medium text-center" id="mainTab" role="tablist">
                 <li class="mr-2" role="presentation">
-                    <button class="tab-button inline-block p-4 border-transparent rounded-t-lg hover:text-gray-300 hover:border-gray-500 active" id="home-tab" type="button" role="tab" aria-controls="home-content" aria-selected="true">首頁</button>
+                    <button class="tab-button inline-block p-4 border-transparent rounded-t-lg active" id="home-tab" type="button" role="tab" aria-controls="home-content" aria-selected="true">首頁</button>
                 </li>
                 <li class="mr-2" role="presentation">
-                    <button class="tab-button inline-block p-4 border-transparent rounded-t-lg hover:text-gray-300 hover:border-gray-500" id="plan-tab" type="button" role="tab" aria-controls="plan-content" aria-selected="false">學習計畫</button>
-                </li>
-                <li class="mr-2" role="presentation">
-                    <button class="tab-button inline-block p-4 border-transparent rounded-t-lg hover:text-gray-300 hover:border-gray-500" id="chart-tab" type="button" role="tab" aria-controls="chart-content" aria-selected="false">圖表分析</button>
+                    <button class="tab-button inline-block p-4 border-transparent rounded-t-lg" id="plan-tab" type="button" role="tab" aria-controls="plan-content" aria-selected="false">學習計畫</button>
                 </li>
             </ul>
         </div>
@@ -203,66 +197,31 @@
                 <div id="week-content-container" class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl min-h-[300px]">
                     <div id="week-title"></div> <div id="week-details">
                         </div>
-                    <div id="progress-tracker-container" class="mt-8 pt-6 border-t border-gray-700">
-                        </div>
-                </div>
-            </div>
-
-            <div id="chart-content" class="hidden" role="tabpanel" aria-labelledby="chart-tab">
-                <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl min-h-[400px] flex flex-col items-center justify-center">
-                     <h2>學習進度分析</h2>
-                     <div class="w-full max-w-md h-80 sm:h-96">
-                        <canvas id="progressChart"></canvas>
-                     </div>
-                     <p id="chart-loading-message" class="text-gray-400 mt-4 hidden">圖表載入中...</p>
-                     <p id="chart-error-message" class="text-red-400 mt-4 hidden">無法載入圖表資料。</p>
-                </div>
+                    </div>
             </div>
         </div>
         
         <footer class="text-center mt-12 text-sm text-gray-500">
-            <p>學習進度將儲存於您的帳戶中。</p>
-            <p id="user-id-display" class="mt-1"></p>
-        </footer>
+            <p>自主學習計畫內容瀏覽。</p> </footer>
     </div>
 
     <div id="loading-indicator" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="text-white text-xl">載入中...</div>
     </div>
 
-    <script type="module">
-        // Firebase SDK imports
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Firebase configuration and App ID (to be provided by the environment)
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Default for local testing
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        
-        let db, auth, userId, isAuthReady = false;
-        let progressChartInstance = null; // To hold the chart instance
-
+    <script>
         const loadingIndicator = document.getElementById('loading-indicator');
         const weekSelector = document.getElementById('week-selector');
         const weekTitleElement = document.getElementById('week-title');
         const weekDetailsElement = document.getElementById('week-details');
-        const progressTrackerContainer = document.getElementById('progress-tracker-container');
-        const userIdDisplay = document.getElementById('user-id-display');
         const planSummaryDiv = document.getElementById('plan-summary');
 
         const homeTabButton = document.getElementById('home-tab');
         const planTabButton = document.getElementById('plan-tab');
-        const chartTabButton = document.getElementById('chart-tab');
         
         const homeContentDiv = document.getElementById('home-content');
         const planContentDiv = document.getElementById('plan-content');
-        const chartContentDiv = document.getElementById('chart-content');
         
-        const chartLoadingMessage = document.getElementById('chart-loading-message');
-        const chartErrorMessage = document.getElementById('chart-error-message');
-
 
         // --- START OF WEEKLY PLAN DATA ---
         const weeklyPlanData = [
@@ -593,8 +552,8 @@ df.info()</code></pre>
                     <h3>🎯 學習目標</h3>
                     <ul>
                         <li>能在 Colab 上成功讀取 <code>.csv</code> 格式的資料集。</li>
-                        <li>確認資料的欄位（features）與目標欄位（label）結構。</li>
-                        <li>建立初步的資料摘要報告（含資料型別、缺失值、基本統計等）。</li>
+                        <li>確認資料の欄位（features）與目標欄位（label）結構。</li>
+                        <li>建立初步の資料摘要報告（含資料型別、缺失值、基本統計等）。</li>
                         <li>製作資料視覺化圖表（如長條圖、分布圖、箱型圖）。</li>
                     </ul>
                     <h3>✅ 本週任務一覽</h3>
@@ -2053,8 +2012,8 @@ AI輔助阿茲海默症早期偵測與預後分析
         function switchTab(activeTabId) {
             const tabs = [
                 { button: homeTabButton, content: homeContentDiv, id: 'home' },
-                { button: planTabButton, content: planContentDiv, id: 'plan' },
-                { button: chartTabButton, content: chartContentDiv, id: 'chart' }
+                { button: planTabButton, content: planContentDiv, id: 'plan' }
+                // Removed chart tab
             ];
 
             tabs.forEach(tab => {
@@ -2073,10 +2032,7 @@ AI輔助阿茲海默症早期偵測與預後分析
 
             if (activeTabId === 'home') {
                 generatePlanSummary();
-            } else if (activeTabId === 'chart') {
-                generateProgressChart();
-            } else if (activeTabId === 'plan' && weekSelector.options.length > 0 && isAuthReady) {
-                // If switching to plan tab, ensure current week content is loaded
+            } else if (activeTabId === 'plan' && weekSelector.options.length > 0) {
                 displayWeekContent(weekSelector.value);
             }
         }
@@ -2103,74 +2059,6 @@ AI輔助阿茲海默症早期偵測與預後分析
             planSummaryDiv.innerHTML = summaryHTML;
         }
 
-        // Function to initialize Firebase
-        async function initializeFirebase() {
-            if (!firebaseConfig) {
-                console.error("Firebase config is not defined. Progress tracking will not work.");
-                isAuthReady = true; 
-                userIdDisplay.textContent = "無法連接資料庫，進度追蹤功能不可用(設定未提供)。"; 
-                db = null; 
-                auth = null;
-                return;
-            }
-            try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                if (db) {
-                    console.log("Firestore DB initialized successfully.");
-                } else {
-                    // This case should ideally be caught by getFirestore throwing an error if it fails.
-                    console.error("Firestore DB initialization failed, db is null/undefined after getFirestore().");
-                }
-                setLogLevel('debug'); 
-
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        console.log("User is signed in with UID:", userId);
-                        userIdDisplay.textContent = `使用者ID: ${userId}`;
-                    } else {
-                        console.log("No user signed in, attempting sign-in.");
-                        if (initialAuthToken) {
-                            try {
-                                await signInWithCustomToken(auth, initialAuthToken);
-                                console.log("Signed in with custom token.");
-                            } catch (error) {
-                                console.error("Error signing in with custom token, trying anonymous:", error);
-                                await signInAnonymously(auth);
-                                console.log("Signed in anonymously after custom token failure.");
-                            }
-                        } else {
-                            await signInAnonymously(auth);
-                            console.log("Signed in anonymously.");
-                        }
-                    }
-                    isAuthReady = true;
-                    // Handle initial tab display based on auth readiness
-                    const activeTabButton = document.querySelector('.tab-button.active');
-                    if (activeTabButton) {
-                        const activeTabId = activeTabButton.id.split('-')[0]; // e.g., 'home', 'plan', 'chart'
-                         if (activeTabId === 'home') {
-                            generatePlanSummary();
-                        } else if (activeTabId === 'plan' && weekSelector.options.length > 0) {
-                            displayWeekContent(weekSelector.value);
-                        } else if (activeTabId === 'chart') {
-                            generateProgressChart();
-                        }
-                    }
-                });
-
-            } catch (error) { // This catch is for initializeApp, getAuth, or getFirestore
-                console.error("Error initializing Firebase (initializeApp, getAuth, or getFirestore):", error);
-                isAuthReady = true; 
-                userIdDisplay.textContent = "Firebase 初始化失敗，進度追蹤功能不可用。";
-                db = null; // Explicitly set db to null on catch
-                auth = null;
-            }
-        }
-
-
         // Function to populate week selector
         function populateWeekSelector() {
             weeklyPlanData.forEach(week => {
@@ -2182,11 +2070,7 @@ AI輔助阿茲海默症早期偵測與預後分析
         }
 
         // Function to display week content
-        async function displayWeekContent(weekId) {
-            if (!isAuthReady) {
-                console.log("Auth not ready, deferring content display for week:", weekId);
-                return;
-            }
+        function displayWeekContent(weekId) {
             if (planContentDiv.classList.contains('hidden')) {
                 return; // Only display if plan tab is active
             }
@@ -2196,222 +2080,38 @@ AI輔助阿茲海默症早期偵測與預後分析
             if (selectedWeek) {
                 weekTitleElement.innerHTML = selectedWeek.title; 
                 weekDetailsElement.innerHTML = selectedWeek.content; 
-
-                progressTrackerContainer.innerHTML = '';
-                const progressDiv = document.createElement('div');
-                progressDiv.innerHTML = `
-                    <label for="progress-tracker-${selectedWeek.id}" class="block mb-2 text-sm font-medium text-gray-300">進度追蹤：</label>
-                    <select id="progress-tracker-${selectedWeek.id}" data-weekid="${selectedWeek.id}" class="progress-select bg-gray-700 border border-gray-600 text-gray-100 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full md:w-1/3 p-2.5">
-                        <option value="未開始">未開始</option>
-                        <option value="進行中">進行中</option>
-                        <option value="已完成">已完成</option>
-                    </select>
-                `;
-                progressTrackerContainer.appendChild(progressDiv);
-                
-                const progressSelect = document.getElementById(`progress-tracker-${selectedWeek.id}`);
-                if (progressSelect) {
-                    progressSelect.addEventListener('change', handleProgressChange);
-                    if (db && userId) { 
-                        await loadWeekProgress(selectedWeek.id, progressSelect);
-                    } else {
-                        console.warn("Firebase not available, progress not loaded for week:", selectedWeek.id);
-                    }
-                }
-
+                // Removed progress tracker population
             } else {
                 weekTitleElement.textContent = "未找到該週次";
                 weekDetailsElement.innerHTML = "<p>請從下拉選單中選擇一個週次。</p>";
             }
             hideLoading();
         }
-
-        // Function to handle progress change
-        async function handleProgressChange(event) {
-            if (!db || !userId) {
-                console.error("Firestore not initialized or user not logged in. Cannot save progress.");
-                return;
-            }
-            const weekId = event.target.dataset.weekid;
-            const status = event.target.value;
-            showLoading();
-            try {
-                const progressDocRef = doc(db, `artifacts/${appId}/users/${userId}/studyPlanProgress/${weekId}`);
-                await setDoc(progressDocRef, { status: status });
-                console.log(`Progress for ${weekId} saved: ${status}`);
-                if (chartContentDiv && !chartContentDiv.classList.contains('hidden')) {
-                    generateProgressChart();
-                }
-            } catch (error) {
-                console.error("Error saving progress:", error);
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // Function to load week progress
-        async function loadWeekProgress(weekId, selectElement) {
-             if (!db || !userId || !selectElement) {
-                console.warn("Cannot load progress: Firestore, userId, or selectElement missing for week:", weekId);
-                return;
-            }
-            showLoading();
-            try {
-                const progressDocRef = doc(db, `artifacts/${appId}/users/${userId}/studyPlanProgress/${weekId}`);
-                const docSnap = await getDoc(progressDocRef);
-                if (docSnap.exists()) {
-                    selectElement.value = docSnap.data().status;
-                    console.log(`Progress for ${weekId} loaded: ${docSnap.data().status}`);
-                } else {
-                    console.log(`No progress found for ${weekId}, defaulting to '未開始'.`);
-                    selectElement.value = "未開始"; 
-                }
-            } catch (error) {
-                console.error("Error loading progress:", error);
-                selectElement.value = "未開始"; 
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // Function to generate progress chart
-        async function generateProgressChart() {
-            if (!isAuthReady || !db || !userId) {
-                console.warn("Chart generation deferred: Auth or DB not ready.");
-                chartErrorMessage.textContent = "無法連接資料庫以載入圖表資料。";
-                chartErrorMessage.classList.remove('hidden');
-                chartLoadingMessage.classList.add('hidden');
-                if (progressChartInstance) { // Clear previous chart if any
-                    progressChartInstance.destroy();
-                    progressChartInstance = null;
-                }
-                return;
-            }
-            
-            chartLoadingMessage.classList.remove('hidden');
-            chartErrorMessage.classList.add('hidden');
-
-            try {
-                const progressCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/studyPlanProgress`);
-                const querySnapshot = await getDocs(progressCollectionRef);
-
-                let progressCounts = { "未開始": 0, "進行中": 0, "已完成": 0 };
-                const allWeekIds = weeklyPlanData.map(w => w.id);
-                const fetchedProgress = {};
-
-                querySnapshot.forEach((doc) => {
-                    fetchedProgress[doc.id] = doc.data().status;
-                });
-
-                allWeekIds.forEach(weekId => {
-                    const status = fetchedProgress[weekId] || "未開始"; 
-                    if (progressCounts[status] !== undefined) {
-                        progressCounts[status]++;
-                    }
-                });
-                
-                const ctx = document.getElementById('progressChart').getContext('2d');
-                if (progressChartInstance) {
-                    progressChartInstance.destroy(); 
-                }
-                progressChartInstance = new Chart(ctx, {
-                    type: 'pie', 
-                    data: {
-                        labels: ['未開始', '進行中', '已完成'],
-                        datasets: [{
-                            label: '學習進度',
-                            data: [progressCounts['未開始'], progressCounts['進行中'], progressCounts['已完成']],
-                            backgroundColor: [
-                                'rgba(239, 68, 68, 0.7)',  // Tailwind red-500
-                                'rgba(245, 158, 11, 0.7)', // Tailwind amber-500
-                                'rgba(16, 185, 129, 0.7)'  // Tailwind emerald-500
-                            ],
-                            borderColor: [
-                                'rgba(239, 68, 68, 1)',
-                                'rgba(245, 158, 11, 1)',
-                                'rgba(16, 185, 129, 1)'
-                            ],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                                labels: {
-                                    color: '#e5e7eb' 
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: '各週進度分佈 (共18週)',
-                                color: '#e5e7eb',
-                                font: { size: 16 }
-                            },
-                             tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed !== null) {
-                                            label += context.parsed + ' 週';
-                                        }
-                                        return label;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-                chartLoadingMessage.classList.add('hidden');
-            } catch (error) {
-                console.error("Error generating progress chart:", error);
-                chartErrorMessage.textContent = "載入圖表時發生錯誤。";
-                chartErrorMessage.classList.remove('hidden');
-                chartLoadingMessage.classList.add('hidden');
-                 if (progressChartInstance) { // Clear previous chart if any on error
-                    progressChartInstance.destroy();
-                    progressChartInstance = null;
-                }
-            }
-        }
-
-
+        
         // Event listeners for tabs
         homeTabButton.addEventListener('click', () => switchTab('home'));
         planTabButton.addEventListener('click', () => switchTab('plan'));
-        chartTabButton.addEventListener('click', () => switchTab('chart'));
         
         // Event listener for week selector
         weekSelector.addEventListener('change', (event) => {
-            if (isAuthReady && planContentDiv && !planContentDiv.classList.contains('hidden')) {
+            if (planContentDiv && !planContentDiv.classList.contains('hidden')) {
                 displayWeekContent(event.target.value);
-            } else {
-                // console.log("Auth not ready or plan tab not active, week selection ignored for now.");
             }
         });
 
         // Initialize
-        (async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             showLoading();
-            await initializeFirebase(); 
             populateWeekSelector();
             switchTab('home'); // Set "首頁" as the default active tab
             
-            // The onAuthStateChanged will handle initial content loading based on the active tab
-            // For the case where Firebase is not configured, we need to manually trigger content load for home.
-            if (!firebaseConfig) {
-                generatePlanSummary(); // Ensure summary is generated if Firebase isn't used
-                if (weekSelector.options.length > 0 && planContentDiv && !planContentDiv.classList.contains('hidden')) {
-                    displayWeekContent(weekSelector.value); 
-                }
+            if (homeContentDiv && !homeContentDiv.classList.contains('hidden')) {
+                 generatePlanSummary();
+            } else if (planContentDiv && !planContentDiv.classList.contains('hidden') && weekSelector.options.length > 0) {
+                 displayWeekContent(weekSelector.value);
             }
             hideLoading();
-        })();
+        });
 
     </script>
 </body>
